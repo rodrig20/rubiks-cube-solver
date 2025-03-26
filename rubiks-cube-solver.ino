@@ -19,7 +19,7 @@ Solver cube("054305225013310135223124124533035111423144040402550245");
 #ifdef ESP32
 WebServer server(80);
 #else
-Esp8266WebServer server(80);
+ESP8266WebServer server(80);
 #endif
 
 
