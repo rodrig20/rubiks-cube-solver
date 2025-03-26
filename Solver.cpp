@@ -983,8 +983,8 @@ string Solver::EO_force() {
     if (check_state_EO() == 1) {
         return "";
     }
-    string move_set[] = {"U",  "F",  "R",  "B",  "L",  "D",  "U'", "F'", "R'",
-                         "B'", "L'", "D'"};
+    string move_set[] = {"U",  "F",  "R",  "B",  "L",  "D",
+                         "U'", "F'", "R'", "B'", "L'", "D'"};
 
     for (int move_count = 1; move_count < 8; move_count++) {
         // Número que vai represnetar a combinação de moviementos
@@ -1028,7 +1028,8 @@ string Solver::EO() {
     string move_sequence = string(file.readStringUntil('\n').c_str());
     file.close();
 
-    return revert_move(move_sequence);;
+    return revert_move(move_sequence);
+    ;
 }
 
 // Resolve a etapa da cruz

@@ -2,18 +2,18 @@
 
 // Incluir a biblioteca correta com base na plataforma
 #ifdef ESP32
-  #include <WiFi.h>
-  #include <WebServer.h>
+#include <WebServer.h>
+#include <WiFi.h>
 #else
-  #include <ESP8266WiFi.h>
-  #include <ESP8266WebServer.h>
+#include <ESP8266WebServer.h>
+#include <ESP8266WiFi.h>
 #endif
-  #include <LittleFS.h>
+#include <LittleFS.h>
 
 #include "Solver.hpp"
 
 const char* ssid = "CubeSolver";
-const char* password = "#cubeSolver"; // Pelo menos 8 caracteres obrigatórios no 
+const char* password = "#cubeSolver";  // Pelo menos 8 caracteres obrigatórios no
 
 Solver cube("054305225013310135223124124533035111423144040402550245");
 #ifdef ESP32
@@ -21,7 +21,6 @@ WebServer server(80);
 #else
 Esp8266WebServer server(80);
 #endif
-
 
 void serveFile(const String& path, const String& contentType) {
   if (LittleFS.exists(path)) {
@@ -38,16 +37,19 @@ void setupRoutes() {
     serveFile("/index.html", "text/html");
   });
 
-  server.on("/css/style.css", HTTP_GET, []() {
-    serveFile("/css/style.css", "text/css");
-  });
+  server.on("/css/style.css", HTTP_GET,
+            []() {
+              serveFile("/css/style.css", "text/css");
+            });
 
-  server.on("/js/app.js", HTTP_GET, []() {
-    serveFile("/js/app.js", "application/javascript");
-  });
+  server.on("/js/app.js", HTTP_GET,
+            []() {
+              serveFile("/js/app.js", "application/javascript");
+            });
 
   server.on("/cubestate", HTTP_GET, []() {
-    server.send(200, "application/json", getCubeStateString(cube.piece_state()));
+    server.send(200, "application/json",
+                getCubeStateString(cube.piece_state()));
   });
 
   server.on("/sendmove", HTTP_POST, []() {
@@ -100,7 +102,7 @@ void setup() {
 
   // Configurar Wi-Fi dependendo da plataforma
   WiFi.softAP(ssid, password);
-  
+
   Serial.println("\nRede Wi-Fi criada!");
   Serial.print("Endereço IP do AP: ");
   Serial.println(WiFi.softAPIP());
@@ -110,10 +112,10 @@ void setup() {
   server.begin();
   Serial.println("Servidor HTTP iniciado!");
 
- //Solver cube_p(Solver::solved_string());
-  //cube_p.move("U R2 F B R B2 R U2 L B2 R U' D' R2 F R' L B2 U2 F2");
+  // Solver cube_p(Solver::solved_string());
+  // cube_p.move("U R2 F B R B2 R U2 L B2 R U' D' R2 F R' L B2 U2 F2");
 
-  //cube.match_state(cube_p);
+  // cube.match_state(cube_p);
 }
 
 void loop() {
