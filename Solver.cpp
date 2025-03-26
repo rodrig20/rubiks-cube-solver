@@ -902,7 +902,6 @@ string Solver::mirror_move(const string move_string, int right_left_mirror,
     return new_move_string;
 }
 
-
 // Resolve a etapa de orientação de edges (Edge Orientation) com brute-force
 string Solver::EO_force() {
     if (check_state_EO() == 1) {
@@ -1594,43 +1593,51 @@ string Solver::simplify_move(const string move_string) {
     return new_move_string;
 }
 
+// Aplica um embaralhamento de um determinado tamanho
 string Solver::scramble(int size) {
     string move_set[] = {"U",  "F",  "R",  "B",  "L",  "D",  "U'", "F'", "R'",
                          "B'", "L'", "D'", "U2", "F2", "R2", "B2", "L2", "D2"};
 
     string move_sequence = "";
+    // Adicionar um moviemnto aletório
     for (int i = 0; i < size; i++) {
         int move_index = rand() % 18;
         move_sequence += move_set[move_index] + " ";
     }
 
+    // Simplifica a sequencia de movimentos, aplica-a e retorna a mesma
     move_sequence = simplify_move(move_sequence);
     move(move_sequence);
-
     return move_sequence;
 }
 
+// Obtem o estado atual do cubo organizado por peças
 array<array<int, 3>, 26> Solver::piece_state() {
+    // Array de peças com em que cada peça é representada por outro array com as cores na ordem: {TOP-DOWN, RIGHT-LEFT, FRONT-BACK}
     array<array<int, 3>, 26> state;
-    array<int, 3> corner_colors;
 
-    // Corners
+    // É necessário trocar a ordem para que fique num posição melhor (para o web server)
+
+    // Nova posição dos corners
     int corner_pos[] = {0, 17, 19, 2, 6, 23, 25, 8};
     for (int i = 0; i < 8; i++) {
         int color1, color2, color3;
+        // Decidir ordem das cores
         if (i % 2 == 0 && i < 4 || i % 2 != 0 && i >= 4) {
             tie(color1, color3, color2) = corners[i].colors();
         } else {
             tie(color1, color2, color3) = corners[i].colors();
         }
+        // Adicionar ao array
         state[corner_pos[i]] = {color1, color2, color3};
     }
 
-    // Edges
+    // Nova posição dos edges
     int edge_pos[] = {9, 18, 11, 1, 14, 24, 16, 7, 3, 20, 22, 5};
     for (int i = 0; i < 12; i++) {
         int color1, color2;
         tie(color1, color2) = edges[i].colors();
+        // Decidir ordem das cores
         if (i < 8 && i % 2 == 0) {
             state[edge_pos[i]] = {color1, color2, -1};
         } else if (i < 8) {
@@ -1640,15 +1647,17 @@ array<array<int, 3>, 26> Solver::piece_state() {
         }
     }
 
-    // Centers
+    // Nova posição dos centros
     int center_pos[] = {10, 12, 4, 13, 21, 15};
     for (int i = 0; i < 6; i++) {
+        // Igual em todas os lados
         state[center_pos[i]] = {i, i, i};
     }
 
     return state;
 }
 
+// Obtem o estado atual do cubo organizado por cores (o método que é usado para criar o objeto)
 string Solver::sticker_state() {
     // Converter face em string
     auto faceToString = [](Face face) -> string {
@@ -1662,6 +1671,7 @@ string Solver::sticker_state() {
         return resultado;
     };
 
+    // Juntar todas as faces
     string cube_state = faceToString(get_U());
     cube_state += faceToString(get_F());
     cube_state += faceToString(get_R());
@@ -1672,21 +1682,29 @@ string Solver::sticker_state() {
     return cube_state;
 }
 
+// Transforma o cubo em outro cubo e retorna a sequencia de movimentos para tal
 string Solver::match_state(Solver& cube_to_match) {
+    // Cria um objeto temporário com o estado atual do cubo e resolve-o
     Solver* start_cube = new Solver(sticker_state());
     string move_sequence_1 = start_cube->solve();
+    // Apaga o objeto para não pesar na memória
     delete start_cube;
     start_cube = nullptr;
 
-    // Criar cópia para não mudificar o cubo do argumento
+    // Criar cópia temporária do objeto para não modificar o cubo que foi passado como argumento e resolve-o
     Solver* end_cube = new Solver(cube_to_match.sticker_state());
     string move_sequence_2 = end_cube->solve();
+    // Apaga o objeto para não pesar na memória
     delete end_cube;
     end_cube = nullptr;
 
+    // Cria um cubo para aplicar as soluções anteriores
     Solver final_cube(Solver::solved_string());
+    // Cria cubo com equivalente à distancia entre os dois estados e resolve-o
     final_cube.revert_move(move_sequence_1 + " " + move_sequence_2);
     string final_move_sequence = final_cube.solve();
+
+    // Aplica a solução e retorna-a
     move(final_move_sequence);
     return final_move_sequence;
 }
