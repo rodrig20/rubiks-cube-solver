@@ -902,81 +902,6 @@ string Solver::mirror_move(const string move_string, int right_left_mirror,
     return new_move_string;
 }
 
-/*
-// Resolve a etapa de orientação de edges (Edge Orientation) com brute-force
-string Solver::EO() {
-    if (check_state_EO() == 1) {
-        return "";
-    }
-    // Soluções já testadas
-    unordered_set<int> tested_cases_table = {};
-    string move_set[] = {"U",  "F",  "R",  "B",  "L",  "D",  "U'", "F'", "R'",
-                         "B'", "L'", "D'", "U2", "F2", "R2", "B2", "L2", "D2"};
-    // Inicia com uma sequencia vazia
-    vector<string> move_sequences = {""};
-
-    while (true) {
-        vector<string> new_move_sequences;
-        // Itera sobre todas as sequências de movimentos atuais para que
-        // sejam adicionados novos
-        for (size_t s = 0; s < move_sequences.size(); s++) {
-            yield();
-            string last_move =
-                (move_sequences[s].size() >= 2)
-                    ? move_sequences[s].substr(move_sequences[s].size() - 2, 2)
-                    : "";  // Último movimento
-            string before_last_move =
-                (move_sequences[s].size() >= 4)
-                    ? move_sequences[s].substr(move_sequences[s].size() - 4, 2)
-                    : "";  // Penúltimo movimento
-
-            // Loop sobre os possíveis movimentos
-            for (size_t m = 0; m < 18; m++) {  // 18 movimentos possíveis
-                // Aplica o movimento atual
-                move(move_sequences[s]);
-
-                // Verifica se o movimento não é uma variação do último
-                // movimento
-                if (move_set[m][0] != last_move[0]) {
-                    // Atualiza o movimento
-                    string final_move = move_sequences[s] + " " + move_set[m];
-                    move(move_set[m]);
-
-                    int edge_ori = get_edge_ori_coord();
-                    if (edge_ori != 0) {
-                        // Verifica se já se encontrou algum estado com o
-                        // mesmo valor de EO
-                        if (tested_cases_table.find(edge_ori) ==
-                            tested_cases_table.end()) {
-                            // Caso não tenha sido encontrado, atualiza a
-                            // tabela de casos testados
-                            tested_cases_table.insert(edge_ori);
-                            // Adiciona o estado atual para ser acrescentado
-                            // mais movimentos na proxima iteração
-                            new_move_sequences.push_back(final_move);
-                        }
-                        // Se a orintação das edges == 0 significa que a
-                        // etapa EO está resolvido
-                    } else {
-                        // Retorna a solução encontrada
-                        return final_move;
-                    }
-                    // Desfaz o movimento
-                    revert_move(move_set[m]);
-                }
-
-                // Desfaz o movimento original
-                revert_move(move_sequences[s]);
-            }
-        }
-
-        // Atualiza as novas sequências
-        move_sequences = new_move_sequences;
-    }
-
-    // Caso não encontre solução
-    return "-";
-}*/
 
 // Resolve a etapa de orientação de edges (Edge Orientation) com brute-force
 string Solver::EO_force() {
@@ -1108,7 +1033,6 @@ string Solver::cross() {
             tie(main, secundary) = edges[e].colors();
             // Quando encontrar a próxima edge da cruz
             if (main == 0 && secundary == next_color) {
-                // show();
                 //  Se ela já estiver na posição correta ignora
                 if (e == 1) {
                     move("U'");

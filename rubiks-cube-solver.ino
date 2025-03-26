@@ -13,7 +13,7 @@
 #include "Solver.hpp"
 
 const char* ssid = "CubeSolver";
-const char* password = "#cubeSolver";  // Pelo menos 8 caracteres obrigatórios no
+const char* password = "#cubeSolver";
 
 Solver cube("054305225013310135223124124533035111423144040402550245");
 #ifdef ESP32
@@ -111,11 +111,6 @@ void setup() {
 
   server.begin();
   Serial.println("Servidor HTTP iniciado!");
-
-  // Solver cube_p(Solver::solved_string());
-  // cube_p.move("U R2 F B R B2 R U2 L B2 R U' D' R2 F R' L B2 U2 F2");
-
-  // cube.match_state(cube_p);
 }
 
 void loop() {
