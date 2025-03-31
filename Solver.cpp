@@ -1277,18 +1277,9 @@ string Solver::F2L() {
                     for (int edge_pos = 4; edge_pos < 8; edge_pos++) {
                         // Percorrer as edges do topo
                         if (edges[edge_pos].colors() == vals) {
-                            // Se a peça tiver de ir para frente-direita ou
+                            // Se a peça não tiver de ir para frente-direita ou
                             // tras-esquerda
-                            if ((secundary_color == 1 && tertiary_color == 2) ||
-                                (secundary_color == 3 &&
-                                 tertiary_color == 4)) {  //! side == front
-                                f2l_case =
-                                    (F2L_ALGS["corner_top"][to_string(
-                                        corners[corner_pos].orientation())]
-                                             [to_string(
-                                                  (corner_pos - edge_pos + 4) % 4)]
-                                                 .as<string>());
-                            } else {
+                            if (side != front) {
                                 string edge_pos_json;
                                 string corner_ori;
                                 // Espelhar
@@ -1323,6 +1314,13 @@ string Solver::F2L() {
                                 f2l_case = (F2L_ALGS["corner_top"][corner_ori]
                                                     [edge_pos_json]
                                                         .as<string>());
+                            } else {
+                                f2l_case = (F2L_ALGS["corner_top"][to_string(
+                                    corners[corner_pos].orientation())]
+                                                    [to_string((corner_pos -
+                                                                edge_pos + 4) %
+                                                               4)]
+                                                        .as<string>());
                             }
                             break;
                         }
@@ -1339,9 +1337,7 @@ string Solver::F2L() {
                     string corner_ori;
                     // Se a peça não tiver de ir para frente-direita ou
                     // tras-esquerda
-                    if (!((secundary_color == 1 && tertiary_color == 2) ||
-                          (secundary_color == 3 &&
-                           tertiary_color == 4))) {  //! side == front
+                    if (side != front) {
                         // Espelhar
                         switch (corners[corner_pos].orientation()) {
                             case 1:
