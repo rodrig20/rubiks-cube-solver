@@ -75,7 +75,7 @@ void setupRoutes() {
 
   // Aplica um scramble e envia os movimentos
   server.on("/scramble", HTTP_GET, []() {
-    server.send(200, "text/plain", String(cube.scramble(26).c_str()));
+    server.send(200, "text/plain", String(cube.scramble(20).c_str()));
   });
 }
 
