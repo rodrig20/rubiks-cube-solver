@@ -1263,8 +1263,6 @@ string Solver::F2L() {
                 corner_pos -= on_cross_layer * 4;
                 string f2l_case;
                 // Se o corner não estiver na primeira camada
-                // TODO MELHORAR A CONSISTENCIA entre on_cross_layer == 0 e
-                // on_cross_layer != 0
                 if (on_cross_layer == 0) {
                     // Girar a camada oposta à da cruz, até que o corner
                     // fique em na mesma coluna do seu lugar
@@ -1274,24 +1272,14 @@ string Solver::F2L() {
                         move_sequence += " D";
                     }
                     tuple<int, int> vals = {secundary_color, tertiary_color};
-                    for (int edge_pos = 0; edge_pos < 4;
-                         edge_pos++) {  //! Aplicar o +4 no loop
+                    for (int edge_pos = 4; edge_pos < 8; edge_pos++) {
                         // Percorrer as edges do topo
-                        if (edges[edge_pos + 4].colors() == vals) {
-                            // Se a peça tiver de ir para frente-direita ou
+                        if (edges[edge_pos].colors() == vals) {
+                            string edge_pos_json;
+                            string corner_ori;
+                            // Se a peça não tiver de ir para frente-direita ou
                             // tras-esquerda
-                            if ((secundary_color == 1 && tertiary_color == 2) ||
-                                (secundary_color == 3 &&
-                                 tertiary_color == 4)) {  //! side == front
-                                f2l_case = (F2L_ALGS["corner_top"][to_string(
-                                    corners[corner_pos].orientation())]
-                                                    [to_string((corner_pos -
-                                                                edge_pos + 4) %
-                                                               4)]
-                                                        .as<string>());
-                            } else {
-                                string edge_pos_json;
-                                string corner_ori;
+                            if (side != front) {
                                 // Espelhar
                                 switch ((corner_pos - edge_pos + 4) % 4) {
                                     case 0:
@@ -1321,10 +1309,15 @@ string Solver::F2L() {
                                         break;
                                 }
 
-                                f2l_case = (F2L_ALGS["corner_top"][corner_ori]
-                                                    [edge_pos_json]
-                                                        .as<string>());
+                            } else {
+                                corner_ori = to_string(
+                                    corners[corner_pos].orientation());
+                                edge_pos_json =
+                                    to_string((corner_pos - edge_pos + 4) % 4);
                             }
+                            f2l_case = (F2L_ALGS["corner_top"][corner_ori]
+                                                [edge_pos_json]
+                                                    .as<string>());
                             break;
                         }
                     }
@@ -1340,9 +1333,7 @@ string Solver::F2L() {
                     string corner_ori;
                     // Se a peça não tiver de ir para frente-direita ou
                     // tras-esquerda
-                    if (!((secundary_color == 1 && tertiary_color == 2) ||
-                          (secundary_color == 3 &&
-                           tertiary_color == 4))) {  //! side == front
+                    if (side != front) {
                         // Espelhar
                         switch (corners[corner_pos].orientation()) {
                             case 1:
@@ -1363,8 +1354,7 @@ string Solver::F2L() {
 
                     f2l_case =
                         (F2L_ALGS["corner_bottom"][corner_ori].as<string>());
-                };
-
+                }
                 // Aplicar espelhamento
                 f2l_case = mirror_move(f2l_case, !side, !front);
                 move(f2l_case);
@@ -1613,10 +1603,12 @@ string Solver::scramble(int size) {
 
 // Obtem o estado atual do cubo organizado por peças
 array<array<int, 3>, 26> Solver::piece_state() {
-    // Array de peças com em que cada peça é representada por outro array com as cores na ordem: {TOP-DOWN, RIGHT-LEFT, FRONT-BACK}
+    // Array de peças com em que cada peça é representada por outro array com as
+    // cores na ordem: {TOP-DOWN, RIGHT-LEFT, FRONT-BACK}
     array<array<int, 3>, 26> state;
 
-    // É necessário trocar a ordem para que fique num posição melhor (para o web server)
+    // É necessário trocar a ordem para que fique num posição melhor (para o web
+    // server)
 
     // Nova posição dos corners
     int corner_pos[] = {0, 17, 19, 2, 6, 23, 25, 8};
@@ -1657,7 +1649,8 @@ array<array<int, 3>, 26> Solver::piece_state() {
     return state;
 }
 
-// Obtem o estado atual do cubo organizado por cores (o método que é usado para criar o objeto)
+// Obtem o estado atual do cubo organizado por cores (o método que é usado para
+// criar o objeto)
 string Solver::sticker_state() {
     // Converter face em string
     auto faceToString = [](Face face) -> string {
@@ -1691,7 +1684,8 @@ string Solver::match_state(Solver& cube_to_match) {
     delete start_cube;
     start_cube = nullptr;
 
-    // Criar cópia temporária do objeto para não modificar o cubo que foi passado como argumento e resolve-o
+    // Criar cópia temporária do objeto para não modificar o cubo que foi
+    // passado como argumento e resolve-o
     Solver* end_cube = new Solver(cube_to_match.sticker_state());
     string move_sequence_2 = end_cube->solve();
     // Apaga o objeto para não pesar na memória
