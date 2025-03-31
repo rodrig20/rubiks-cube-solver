@@ -46,8 +46,6 @@ void roll_array(int array[], int size, int n) {
     temp = nullptr;
 }
 
-void roll_array(int array[], int size) { roll_array(array, size, 1); }
-
 string array_to_string(int arr[], int size) {
     stringstream ss;
 
@@ -1397,7 +1395,7 @@ string Solver::OLL() {
             break;
         } else {
             // Se não existir é aplicado a face é girada
-            roll_array(corner_orientation, 4);
+            roll_array(corner_orientation, 4, 1);
 
             move("D'");
             move_sequence += " D'";
