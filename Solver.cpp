@@ -1588,15 +1588,35 @@ string Solver::scramble(int size) {
     string move_set[] = {"U",  "F",  "R",  "B",  "L",  "D",  "U'", "F'", "R'",
                          "B'", "L'", "D'", "U2", "F2", "R2", "B2", "L2", "D2"};
 
+    // Obter tamanho da sequencia de movimentos
+    auto move_sequence_size = [](string move_sequence) {
+        int counter = 0;
+        bool last_is_space = true;
+        // Percorrer todos os caracteres da string
+        for (int c = 0; c < move_sequence.size(); c++) {
+            if (!last_is_space && move_sequence[c] == ' ') {
+                counter++;
+                last_is_space = true;
+            } else {
+                last_is_space = false;
+            }
+        }
+        // Adicionar mais 1 ao número de espaços caso não tenha terminado em
+        // espaço
+        if (!last_is_space) {
+            counter++;
+        }
+        return counter;
+    };
+
     string move_sequence = "";
     // Adicionar um moviemnto aletório
-    for (int i = 0; i < size; i++) {
+    while (move_sequence_size(move_sequence) < size) {
         int move_index = rand() % 18;
         move_sequence += move_set[move_index] + " ";
+        move_sequence = simplify_move(move_sequence);
     }
-
     // Simplifica a sequencia de movimentos, aplica-a e retorna a mesma
-    move_sequence = simplify_move(move_sequence);
     move(move_sequence);
     return move_sequence;
 }
