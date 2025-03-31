@@ -46,8 +46,6 @@ void roll_array(int array[], int size, int n) {
     temp = nullptr;
 }
 
-void roll_array(int array[], int size) { roll_array(array, size, 1); }
-
 string array_to_string(int arr[], int size) {
     stringstream ss;
 
@@ -902,39 +900,6 @@ string Solver::mirror_move(const string move_string, int right_left_mirror,
     return new_move_string;
 }
 
-// Resolve a etapa de orientação de edges (Edge Orientation) com brute-force
-string Solver::EO_force() {
-    if (check_state_EO() == 1) {
-        return "";
-    }
-    string move_set[] = {"U",  "F",  "R",  "B",  "L",  "D",
-                         "U'", "F'", "R'", "B'", "L'", "D'"};
-
-    for (int move_count = 1; move_count < 8; move_count++) {
-        // Número que vai represnetar a combinação de moviementos
-        for (int move_c = 0; move_c < pow(12, move_count); move_c++) {
-            yield();
-            string move_sequence = "";
-            int buffer = move_c;
-            for (int i = 0; i < move_count; i++) {
-                move_sequence += move_set[buffer % 12] + " ";
-                buffer /= 12;
-            }
-
-            move(move_sequence);
-
-            int edge_ori = get_edge_ori_coord();
-            if (edge_ori == 0) {
-                return move_sequence;
-            }
-            // Desfaz o movimento
-            revert_move(move_sequence);
-        }
-    }
-
-    // Caso não encontre solução
-    return "-";
-}
 
 // Resolve a etapa de orientação de edges (Edge Orientation) com brute-force
 string Solver::EO() {
@@ -1397,7 +1362,7 @@ string Solver::OLL() {
             break;
         } else {
             // Se não existir é aplicado a face é girada
-            roll_array(corner_orientation, 4);
+            roll_array(corner_orientation, 4, 1);
 
             move("D'");
             move_sequence += " D'";
