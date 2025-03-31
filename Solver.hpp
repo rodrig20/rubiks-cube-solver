@@ -120,7 +120,6 @@ class Solver {
 
     // Etapas de resolução do cubo
     string EO();
-    string EO_force();
     string cross();
     string F2L();
     string OLL();
