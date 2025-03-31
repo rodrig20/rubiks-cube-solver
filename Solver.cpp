@@ -1263,8 +1263,6 @@ string Solver::F2L() {
                 corner_pos -= on_cross_layer * 4;
                 string f2l_case;
                 // Se o corner não estiver na primeira camada
-                // TODO MELHORAR A CONSISTENCIA entre on_cross_layer == 0 e
-                // on_cross_layer != 0
                 if (on_cross_layer == 0) {
                     // Girar a camada oposta à da cruz, até que o corner
                     // fique em na mesma coluna do seu lugar
@@ -1277,11 +1275,11 @@ string Solver::F2L() {
                     for (int edge_pos = 4; edge_pos < 8; edge_pos++) {
                         // Percorrer as edges do topo
                         if (edges[edge_pos].colors() == vals) {
+                            string edge_pos_json;
+                            string corner_ori;
                             // Se a peça não tiver de ir para frente-direita ou
                             // tras-esquerda
                             if (side != front) {
-                                string edge_pos_json;
-                                string corner_ori;
                                 // Espelhar
                                 switch ((corner_pos - edge_pos + 4) % 4) {
                                     case 0:
@@ -1311,17 +1309,15 @@ string Solver::F2L() {
                                         break;
                                 }
 
-                                f2l_case = (F2L_ALGS["corner_top"][corner_ori]
-                                                    [edge_pos_json]
-                                                        .as<string>());
                             } else {
-                                f2l_case = (F2L_ALGS["corner_top"][to_string(
-                                    corners[corner_pos].orientation())]
-                                                    [to_string((corner_pos -
-                                                                edge_pos + 4) %
-                                                               4)]
-                                                        .as<string>());
+                                corner_ori = to_string(
+                                    corners[corner_pos].orientation());
+                                edge_pos_json =
+                                    to_string((corner_pos - edge_pos + 4) % 4);
                             }
+                            f2l_case = (F2L_ALGS["corner_top"][corner_ori]
+                                                [edge_pos_json]
+                                                    .as<string>());
                             break;
                         }
                     }
