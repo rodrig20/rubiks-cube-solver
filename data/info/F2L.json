@@ -1,0 +1,27 @@
+{
+    "corner_top": {
+        "0": {
+            "0": "D2 R2 D2 R D R' D R2",
+            "1": "R' D2 R D R' D' R",
+            "2": "D' R' D2 R D' R' D R",
+            "3": "R' D R D2 R' D' R"
+        },
+        "1": {
+            "0": "R' D' R D2 R' D R D' R' D R",
+            "1": "D' R' D R",
+            "2": "D R' D' R D2 R' D R",
+            "3": "D R' D2 R D2 R' D R"
+        },
+        "2": {
+            "0": "R D2 R2 D' R2 D' R'",
+            "1": "D R' D R D' R' D' R",
+            "2": "R' D' R",
+            "3": "D R' D' R D' R' D' R"
+        }
+    },
+    "corner_bottom": {
+        "0": "R F R' D' R' D R F'",
+        "1": "R' D' R D R' D' R",
+        "2": "R' D R D' R' D R"
+    }
+}
