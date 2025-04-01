@@ -19,15 +19,9 @@ using namespace std;
 using Face = array<array<int, 3>, 3>;
 
 const char* EO_Path = "/info/EO.txt";
-
-const char* F2L_Json =
-    R"rawliteral({"corner_top":{"0":{"0":"D2 R2 D2 R D R' D R2","1":"R' D2 R D R' D' R","2":"D' R' D2 R D' R' D R","3":"R' D R D2 R' D' R"},"1":{"0":"R' D' R D2 R' D R D' R' D R","1":"D' R' D R","2":"D R' D' R D2 R' D R","3":"D R' D2 R D2 R' D R"},"2":{"0":"R D2 R2 D' R2 D' R'","1":"D R' D R D' R' D' R","2":"R' D' R","3":"D R' D' R D' R' D' R"}},"corner_bottom":{"0":"R F R' D' R' D R F'","1":"R' D' R D R' D' R","2":"R' D R D' R' D R"}})rawliteral";
-
-const char* OLL_Json =
-    R"rawliteral({"1002":"R F L' F' R' F L F'","1011":"R' D' R D' R' D2 R","1122":"R' D2 R2 D R2 D R2 D2 R'","1200":"R2 U' R D2 R' U R D2 R","2121":"R' D' R D' R' D R  D' R' D2 R","0222":"L D L' D L D2 L'","0201":"F' R F L' F' R' F L"})rawliteral";
-
-const char* PLL_Json =
-    R"rawliteral({"113241434322":"L' F  L' B2 L F' L' B2 L2","114343231422":"L2 B2 L F L' B2 L F' L","134341413222":"L' D' F' L D L' D' L' F L2 D' L' D' L D L' D L","144321413232":"L2 D L' D L' D' L D' L2 D' U L' D L U'","134311423242":"L' D' L D U' L2 D L' D L D' L D' L2 U","134321443212":"L2 D' L D' L D L' D L2 D U' L D' L' U","124331413242":"L D L' D' U L2 D' L D' L' D L' D L2 U'","114331443222":"L2 U L U' L F2 R' D R F2","144333211422":"R2 U' R' U R' F2 L D' L' F2","114341423232":"L D' L' D' L D L U L' D' L U' L' D2 L'","144323231412":"R' D R D R' D' R' U' R D R' U R D2 R","114321433242":"L D L' D' L' F L2 D' L' D' L D L' F'","143234321412":"L B' L' F L B L' F2 R' B R F R' B' R","133244311422":"R D R' D R2 U' R' U R' F2 L D' L' F2 D' R D' R'","113224331442":"L' D' L D' L2 U L U' L F2 R' D R F2 D L' D L","113234341422":"L' D L' D' B' L' B2 D' B' D B' L B L","133214321442":"F' R' D R D R' D' R F R' D' R D R F' R' F","131424313242":"R2 L2 U R2 L2 D2 R2 L2 U R2 L2","141424333212":"F2 D' R L' F2 R' L D' F2","121414333242":"F2 D R L' F2 R' L D F2","141414323232":"R2 L2 U R2 L2 D R L' F2 R2 L2 B2 R L'","111444333222":""})rawliteral";
+const char* F2L_Path = "/info/F2L.json";
+const char* OLL_Path = "/info/OLL.json";
+const char* PLL_Path = "/info/PLL.json";
 
 void roll_array(int array[], int size, int n) {
     int* temp = new int[size];  // Aloca o array temporário dinamicamente
@@ -502,11 +496,28 @@ int Solver::check_state_OLL() {
 }
 
 // Obtem um json com o estado e o seu respetivo algoritmo para resolver
-void Solver::get_algs(const char* jsonString, StaticJsonDocument<1024>& doc) {
+void Solver::get_algs(const char* json_path, StaticJsonDocument<1024>& doc) {
+    // Abrir o arquivo JSON no path especificado
+    File file = LittleFS.open(json_path, "r");
+    if (!file) {
+        cout << "Falha ao abrir o arquivo JSON: " << json_path << endl;;
+        return;
+    }
+
+    // Ler o conteúdo do arquivo JSON
+    String jsonString = "";
+    while (file.available()) {
+        jsonString += (char)file.read();
+    }
+    file.close();
+
+    // Faz o parsing do JSON e armazena no 'doc'
     DeserializationError error = deserializeJson(doc, jsonString);
+
+    // Verifica se ocorreu algum erro durante o parsing
     if (error) {
-        cout << "Erro ao analisar JSON: ";
-        cout << error.c_str() << endl;
+        cout << "Falha ao aplicar parse do JSON: " << error.f_str() << endl;
+        return;
     }
 }
 
@@ -900,7 +911,6 @@ string Solver::mirror_move(const string move_string, int right_left_mirror,
     return new_move_string;
 }
 
-
 // Resolve a etapa de orientação de edges (Edge Orientation) com brute-force
 string Solver::EO() {
     if (check_state_EO() == 1) {
@@ -1092,7 +1102,7 @@ string Solver::F2L() {
     }
     // Obter os Algoritmos
     StaticJsonDocument<1024> F2L_ALGS;
-    get_algs(F2L_Json, F2L_ALGS);
+    get_algs(F2L_Path, F2L_ALGS);
 
     string move_sequence = "";
     for (int i = 0; i < 4; i++) {
@@ -1350,7 +1360,7 @@ string Solver::OLL() {
     }
 
     StaticJsonDocument<1024> OLL_ALGS;
-    get_algs(OLL_Json, OLL_ALGS);
+    get_algs(OLL_Path, OLL_ALGS);
 
     string move_sequence = "";
     string oll_case;
@@ -1398,7 +1408,7 @@ string Solver::PLL() {
     }
 
     StaticJsonDocument<1024> PLL_ALGS;
-    get_algs(PLL_Json, PLL_ALGS);
+    get_algs(PLL_Path, PLL_ALGS);
 
     string move_sequence = "";
     string pll_case;
