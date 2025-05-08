@@ -98,10 +98,13 @@ class Solver {
     int check_state_OLL();
 
     // Obter algoritmos do json
-    void get_algs(const char* jsonString, StaticJsonDocument<1024>& doc);
+    void get_algs(const char* jsonString, JsonDocument& doc);
 
     // Girar a ultima camada para a acertar
     string finish_last_layer();
+
+    // Obter o tipo de ZBLL
+    tuple<int, string> ZBLL_find(int last_layer_state[16]);
 
    public:
     // Construtor
@@ -124,6 +127,7 @@ class Solver {
     string F2L();
     string OLL();
     string PLL();
+    string ZBLL();
 
     // Resolução completa
     string solve();
