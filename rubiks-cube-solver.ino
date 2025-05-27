@@ -75,10 +75,15 @@ void startCamera() {
     return;
   }
 
-  sensor_t* s = esp_camera_sensor_get();
-  s->set_whitebal(s, 0);       // desliga balanço de brancos automático
-  s->set_awb_gain(s, 0);       // desliga ganho AWB
-  s->set_exposure_ctrl(s, 0);  // desliga controlo automático de exposição
+  sensor_t *s = esp_camera_sensor_get();
+  s->set_brightness(s, 1);     // [-2,2]
+  s->set_contrast(s, 2);       // [-2,2]
+  s->set_saturation(s, 2);     // [-2,2]
+  s->set_whitebal(s, 1);       // 0 = off, 1 = on
+  s->set_awb_gain(s, 1);       // White balance gain
+  s->set_gain_ctrl(s, 1);      // Auto Gain Control
+  s->set_exposure_ctrl(s, 1);  // Auto Exposure Control
+
 }
 
 void handleCapture() {
