@@ -66,7 +66,6 @@ void startCamera() {
   config.pixel_format = PIXFORMAT_RGB565;
   config.fb_location = CAMERA_FB_IN_PSRAM;
 
-  config.jpeg_quality = 10;
   config.fb_count = 2;
   config.grab_mode = CAMERA_GRAB_LATEST;
 
