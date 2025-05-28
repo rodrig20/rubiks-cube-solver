@@ -15,6 +15,7 @@ class Camera {
     void rgb565ToRGB(uint16_t color, uint8_t& r, uint8_t& g, uint8_t& b);
     Color get_color_piece(camera_fb_t* fb, int posx, int posy, int size);
     Color* get_color_face(camera_fb_t* fb);
+    void draw(camera_fb_t* fb, int posx, int posy, int size);
 };
 
 #endif

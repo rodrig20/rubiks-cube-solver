@@ -51,6 +51,31 @@ Color Camera::get_color_piece(camera_fb_t* fb, int posx, int posy, int size) {
     return color;
 }
 
+void Camera::draw(camera_fb_t* fb, int posx, int posy, int size) {
+    int piece_padding = size / 5;
+    uint16_t* pixels = (uint16_t*)fb->buf;
+
+    int x_start = posx + piece_padding;
+    int y_start = posy + piece_padding;
+
+    int x_end = posx + size - piece_padding;
+    int y_end = posy + size - piece_padding;
+
+    int stride_px = (fb->len / fb->height) / 2;
+
+    for (int y = y_start; y < y_end; y++) {
+        for (int x = x_start; x < x_end; x++) {
+            int idx = y * fb->width + x;
+
+            if (y < y_start + 2 || y >= y_end - 2 || x < x_start + 2 ||
+                x >= x_end - 2) {
+                uint16_t new_pixel = ~0;
+                pixels[idx] = new_pixel;
+            }
+        }
+    }
+}
+
 // Obtem a lista de cores de cores de uma face
 Color* Camera::get_color_face(camera_fb_t* fb) {
     int cube_padding = fb->height / 10;
@@ -61,6 +86,13 @@ Color* Camera::get_color_face(camera_fb_t* fb) {
         for (int j = 0; j < 3; j++) {
             cube_state[(i * 3) + j] = get_color_piece(
                 fb, cube_padding + (j * size), cube_padding + (i * size), size);
+        }
+    }
+
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            draw(fb, cube_padding + (j * size), cube_padding + (i * size),
+                 size);
         }
     }
 
