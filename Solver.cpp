@@ -22,6 +22,11 @@ const char* EO_Path = "/info/EO.txt";
 const char* F2L_Path = "/info/F2L.json";
 const char* OLL_Path = "/info/OLL.json";
 const char* PLL_Path = "/info/PLL.json";
+std::map<string, const char*> ZBLL_Path = {
+    {"AS", "/info/ZBLL/ZBLLAS.json"}, {"H", "/info/ZBLL/ZBLLH.json"},
+    {"L", "/info/ZBLL/ZBLLL.json"},   {"Pi", "/info/ZBLL/ZBLLPi.json"},
+    {"S", "/info/ZBLL/ZBLLS.json"},   {"T", "/info/ZBLL/ZBLLT.json"},
+    {"U", "/info/ZBLL/ZBLLU.json"}};
 
 void roll_array(int array[], int size, int n) {
     int* temp = new int[size];  // Aloca o array temporário dinamicamente
@@ -496,11 +501,11 @@ int Solver::check_state_OLL() {
 }
 
 // Obtem um json com o estado e o seu respetivo algoritmo para resolver
-void Solver::get_algs(const char* json_path, StaticJsonDocument<1024>& doc) {
+void Solver::get_algs(const char* json_path, JsonDocument& doc) {
     // Abrir o arquivo JSON no path especificado
     File file = LittleFS.open(json_path, "r");
     if (!file) {
-        cout << "Falha ao abrir o arquivo JSON: " << json_path << endl;;
+        cout << "Falha ao abrir o arquivo JSON: " << json_path << endl;
         return;
     }
 
@@ -533,6 +538,57 @@ string Solver::finish_last_layer() {
         move("D'");
     }
     return move_sequence;
+}
+
+tuple<int, string> Solver::ZBLL_find(int last_layer_state[16]) {
+    for (int i = 0; i < 4; i++) {
+        // Normalizar (1 como Edge frontal)
+        int fst_val = last_layer_state[1];
+        for (int j = 0; j < 16; j++) {
+            if (last_layer_state[j] != 5)
+                last_layer_state[j] =
+                    ((last_layer_state[j] + 4 - fst_val) % 4) + 1;
+        }
+
+        // Verifica tipo de ZBLL
+        if (last_layer_state[0] == 5 && last_layer_state[3] == 5 &&
+            last_layer_state[6] == 5 && last_layer_state[15] == 5) {
+            return make_tuple(i, "AS");
+        } else if (last_layer_state[3] == 5 && last_layer_state[5] == 5 &&
+                   last_layer_state[9] == 5 && last_layer_state[11] == 5) {
+            return make_tuple(i, "H");
+        } else if (last_layer_state[3] == 5 && last_layer_state[8] == 5 &&
+                   last_layer_state[13] == 5 && last_layer_state[14] == 5) {
+            return make_tuple(i, "L");
+        } else if (last_layer_state[2] == 5 && last_layer_state[6] == 5 &&
+                   last_layer_state[9] == 5 && last_layer_state[11] == 5) {
+            return make_tuple(i, "Pi");
+        } else if (last_layer_state[2] == 5 && last_layer_state[5] == 5 &&
+                   last_layer_state[8] == 5 && last_layer_state[13] == 5) {
+            return make_tuple(i, "S");
+        } else if (last_layer_state[5] == 5 && last_layer_state[9] == 5 &&
+                   last_layer_state[12] == 5 && last_layer_state[13] == 5) {
+            return make_tuple(i, "T");
+        } else if (last_layer_state[6] == 5 && last_layer_state[8] == 5 &&
+                   last_layer_state[12] == 5 && last_layer_state[13] == 5) {
+            return make_tuple(i, "U");
+        } else if (last_layer_state[12] == 5 && last_layer_state[13] == 5 &&
+                   last_layer_state[14] == 5 && last_layer_state[15] == 5) {
+            return make_tuple(i, "PLL");
+        }
+
+        // Rodar faces laterais
+        roll_array(last_layer_state, 12, 3);
+        // Rodar topo
+        // TL,TR,BL,BR
+        int temp[] = {last_layer_state[13], last_layer_state[15],
+                      last_layer_state[12], last_layer_state[14]};
+        for (int j = 0; j < 4; j++) {
+            last_layer_state[12 + j] = temp[j];
+        }
+    }
+
+    return make_tuple(-1, "-");
 }
 
 Solver::Solver(string cube_string) {
@@ -1434,6 +1490,59 @@ string Solver::PLL() {
     return move_sequence + " " + finish_last_layer();
 }
 
+string Solver::ZBLL() {
+    if (check_state_F2L() == 0) {
+        return "-";
+    }
+
+    int top_pos[] = {13, 12, 14, 15};
+
+    // Estado das das 16 cores da ultima camada
+    int last_layer_state[16] = {};
+    for (int i = 0; i < 4; i++) {
+        // Obter as cores
+        int top, color1, color2, color3;
+        tie(top, color1, color3) = corners[i + 4].colors();
+        color2 = get<1>(edges[i + 4].colors());
+        // Preencher array
+        last_layer_state[i * 3] = color1;
+        last_layer_state[(i * 3) + 1] = color2;
+        last_layer_state[((i * 3 + 11) % 12)] = color3;
+        last_layer_state[top_pos[i]] = top;
+    }
+
+    int D_count;
+    string ZBLL_type;
+    tie(D_count, ZBLL_type) = ZBLL_find(last_layer_state);
+    if (D_count == -1) {
+        return "-";
+    }
+
+    string move_sequence = "";
+
+    // Quantidade de giros na camada D
+    for (int i = 0; i < D_count; i++) {
+        move_sequence += "D' ";
+    }
+
+    // Obter o Json caso seja uma ZBLL
+    if (ZBLL_type != "PLL") {
+        StaticJsonDocument<1024 * 5> ZBLL_ALGS;
+        get_algs(ZBLL_Path[ZBLL_type], ZBLL_ALGS);
+        string last_layer_state_str = array_to_string(last_layer_state, 16);
+        move_sequence += ZBLL_ALGS[last_layer_state_str].as<string>();
+    // Obter o Json caso seja uma PLL
+    } else {
+        StaticJsonDocument<1024> PLL_ALGS;
+        get_algs(PLL_Path, PLL_ALGS);
+        string last_layer_state_str = array_to_string(last_layer_state, 12);
+        move_sequence += PLL_ALGS[last_layer_state_str].as<string>();
+    }
+
+    move(move_sequence);
+    return move_sequence + " " + finish_last_layer();
+}
+
 // Resolve todas as etapas do cubo
 string Solver::solve() {
     string move_sequence = "";
@@ -1459,19 +1568,12 @@ string Solver::solve() {
     }
     move_sequence += move_sequence_F2L + " ";
 
-    // Resolve OLL
-    string move_sequence_OLL = OLL();
-    if (move_sequence_OLL == "-") {
+    // Resolve ZBLL
+    string move_sequence_ZBLL = ZBLL();
+    if (move_sequence_ZBLL == "-") {
         return "-";
     }
-    move_sequence += move_sequence_OLL + " ";
-
-    // Resolve PLL
-    string move_sequence_PLL = PLL();
-    if (move_sequence_PLL == "-") {
-        return "-";
-    }
-    move_sequence += move_sequence_PLL;
+    move_sequence += move_sequence_ZBLL;
 
     return simplify_move(move_sequence);
 }
