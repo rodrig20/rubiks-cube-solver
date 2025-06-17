@@ -11,6 +11,7 @@
 #include <LittleFS.h>
 
 #include "Solver.hpp"
+#include "Robot.hpp"
 
 const char* ssid = "CubeSolver";
 const char* password = "#cubeSolver";
@@ -131,6 +132,10 @@ void setup() {
 
   // Mensagem Final
   Serial.println("Servidor HTTP iniciado!");
+
+  Robot r = Robot();
+  r.move("R2 L2 F2 B2 U2 D2");
+
 }
 
 void loop() {
