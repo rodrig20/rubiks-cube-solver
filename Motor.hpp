@@ -3,22 +3,22 @@
 
 #include <Adafruit_PWMServoDriver.h>
 
-#define SERVOS_0 100
-#define SERVOS_45 175
-#define SERVOS_90 350
-#define SERVOS_180 600
+const uint16_t SERVO_MIN = 70;   // Pulso mínimo (~0º)
+const uint16_t SERVO_MAX = 520;  // Pulso máximo (~270º)
 
 class Motor {
    private:
-    Adafruit_PWMServoDriver *pwm;
+    Adafruit_PWMServoDriver* pwm;
     int motor_id;
+    uint16_t angleToPulse(int angle);
 
    protected:
     void turn_to(int angle);
 
-    public:
-    void to_default();
-    Motor(Adafruit_PWMServoDriver *pwm, int motor_id);
+   public:
+    Motor(Adafruit_PWMServoDriver* pwm, int motor_id);
+    virtual void to_default() = 0;
+    virtual ~Motor() = default;
 };
 
 #endif

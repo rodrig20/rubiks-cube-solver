@@ -5,9 +5,9 @@
 
 class GrabberMotor: public Motor {
     public:
-        using Motor::Motor;
+        GrabberMotor(Adafruit_PWMServoDriver* pwm, int motor_id);
         void to_lock();
-        void to_default();
+        void to_default() override;
         void spin(int times);
         void spin();
 };
