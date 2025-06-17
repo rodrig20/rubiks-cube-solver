@@ -107,7 +107,6 @@ void Robot::turn_face(int clockwise) {
     if (clockwise) {
         grabber->to_lock();
         base->turn_90(1);
-        delay(1000);
         grabber->to_default();
         base->turn_90_aligned(0);
         int pattern[6] = {0, 2, 3, 4, 1, 5};
@@ -127,7 +126,6 @@ void Robot::turn_face(int clockwise) {
 void Robot::turn_face_2() {
     grabber->to_lock();
     base->turn_180(1);
-    delay(2000);
     grabber->to_default();
     base->turn_180(0);
     int pattern[6] = {0, 3, 4, 1, 2, 5};
