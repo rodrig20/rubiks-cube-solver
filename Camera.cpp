@@ -98,3 +98,69 @@ Color* Camera::get_color_face(camera_fb_t* fb) {
 
     return cube_state;
 }
+
+void Camera::startCamera() {
+    camera_config_t config;
+    config.ledc_channel = LEDC_CHANNEL_0;
+    config.ledc_timer = LEDC_TIMER_0;
+    config.pin_d0 = Y2_GPIO_NUM;
+    config.pin_d1 = Y3_GPIO_NUM;
+    config.pin_d2 = Y4_GPIO_NUM;
+    config.pin_d3 = Y5_GPIO_NUM;
+    config.pin_d4 = Y6_GPIO_NUM;
+    config.pin_d5 = Y7_GPIO_NUM;
+    config.pin_d6 = Y8_GPIO_NUM;
+    config.pin_d7 = Y9_GPIO_NUM;
+    config.pin_xclk = XCLK_GPIO_NUM;
+    config.pin_pclk = PCLK_GPIO_NUM;
+    config.pin_vsync = VSYNC_GPIO_NUM;
+    config.pin_href = HREF_GPIO_NUM;
+    config.pin_sccb_sda = SIOD_GPIO_NUM;
+    config.pin_sccb_scl = SIOC_GPIO_NUM;
+    config.pin_pwdn = PWDN_GPIO_NUM;
+    config.pin_reset = RESET_GPIO_NUM;
+    config.xclk_freq_hz = 20000000;
+    config.frame_size = FRAMESIZE_240X240;
+    config.pixel_format = PIXFORMAT_RGB565;
+    config.fb_location = CAMERA_FB_IN_PSRAM;
+
+    config.fb_count = 2;
+    config.grab_mode = CAMERA_GRAB_LATEST;
+    std::cout << "RUN1\n";
+    esp_err_t err = esp_camera_init(&config);
+    if (err != ESP_OK) {
+        printf("Erro ao iniciar a câmara: 0x%x", err);
+        return;
+    }
+
+    std::cout << "RUN2\n";
+
+    sensor_t* s = esp_camera_sensor_get();
+    s->set_brightness(s, 1);     // [-2,2]
+    s->set_contrast(s, 2);       // [-2,2]
+    s->set_saturation(s, 2);     // [-2,2]
+    s->set_whitebal(s, 1);       // 0 = off, 1 = on
+    s->set_awb_gain(s, 1);       // White balance gain
+    s->set_gain_ctrl(s, 1);      // Auto Gain Control
+    s->set_exposure_ctrl(s, 1);  // Auto Exposure Control
+}
+
+void Camera::capture() {
+    for (int i = 0; i < 6; ++i) {
+        camera_fb_t* fb_temp = esp_camera_fb_get();
+        esp_camera_fb_return(fb_temp);
+    }
+    camera_fb_t* fb = esp_camera_fb_get();
+
+    Color* cube_state = get_color_face(fb);
+    std::cout << "=================\n";
+    for (int i = 0; i < 9; i++) {
+        std::cout << "[" << cube_state[i].R << ", " << cube_state[i].G << ", "
+                  << cube_state[i].B << "]\n";
+    }
+
+    delete[] cube_state;
+    cube_state = nullptr;
+
+    esp_camera_fb_return(fb);
+}
