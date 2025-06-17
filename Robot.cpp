@@ -65,9 +65,9 @@ void Robot::rotate_to_side(const char side) {
         }
         // Direita
         case 2: {
-            base->turn_90(1);
+            base->turn_90_aligned(1);
             grabber->spin(3);
-            base->turn_90(0);
+            base->turn_90_aligned(0);
             int pattern2[6] = {4, 1, 0, 3, 5, 2};
             move_virtual(pattern2);
             break;
@@ -81,9 +81,9 @@ void Robot::rotate_to_side(const char side) {
         }
         // Esquerda
         case 4: {
-            base->turn_90(1);
+            base->turn_90_aligned(1);
             grabber->spin(1);
-            base->turn_90(0);
+            base->turn_90_aligned(0);
             int pattern4[6] = {2, 1, 5, 3, 0, 4};
             move_virtual(pattern4);
             break;
@@ -107,16 +107,16 @@ void Robot::turn_face(int clockwise) {
     if (clockwise) {
         grabber->to_lock();
         base->turn_90(1);
-        delay(1000);
         grabber->to_default();
-        base->turn_90(0);
+        base->turn_90_aligned(0);
         int pattern[6] = {0, 2, 3, 4, 1, 5};
         move_virtual(pattern);
     } else {
-        base->turn_90(1);
+        base->turn_90_aligned(1);
         grabber->to_lock();
         base->turn_90(0);
         grabber->to_default();
+        base->turn_90_aligned(0);
         int pattern[6] = {0, 4, 1, 2, 3, 5};
         move_virtual(pattern);
     }
@@ -126,7 +126,6 @@ void Robot::turn_face(int clockwise) {
 void Robot::turn_face_2() {
     grabber->to_lock();
     base->turn_180(1);
-    delay(2000);
     grabber->to_default();
     base->turn_180(0);
     int pattern[6] = {0, 3, 4, 1, 2, 5};

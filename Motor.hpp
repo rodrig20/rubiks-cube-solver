@@ -8,6 +8,7 @@ const uint16_t SERVO_MAX = 520;  // Pulso máximo (~270º)
 
 class Motor {
    private:
+    int angle = -1;
     Adafruit_PWMServoDriver* pwm;
     int motor_id;
     uint16_t angleToPulse(int angle);
