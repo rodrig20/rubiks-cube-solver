@@ -1,11 +1,84 @@
 #include "Camera.hpp"
 
+#include <Arduino.h>
+
+#include <cmath>
 #include <iostream>
 
 #include "esp_camera.h"
 
 // Troca a ordem de dois bytes
 uint16_t byte_swap(uint16_t value) { return (value >> 8) | (value << 8); }
+
+// Transforma uma cor RGB numa cor HSV
+HSV rgb_to_hsv(uint8_t r, uint8_t g, uint8_t b) {
+    // Normaliza os valores RGB para o intervalo [0, 1]
+    float fr = r / 255.0f;
+    float fg = g / 255.0f;
+    float fb = b / 255.0f;
+
+    // Encontra o valor máximo e mínimo entre R, G e B
+    float max = fmaxf(fr, fmaxf(fg, fb));
+    float min = fminf(fr, fminf(fg, fb));
+
+    // Calcula a diferença entre o máximo e o mínimo (delta)
+    float delta = max - min;
+
+    // Inicializa o valor da matiz (hue)
+    float h = 0.0f;
+
+    // Calcula a matiz só se delta for diferente de zero (cor não cinzenta)
+    if (delta != 0.0f) {
+        // Determina a fórmula a usar consoante qual componente é o máximo
+        if (max == fr) {
+            h = fmodf(((fg - fb) / delta), 6.0f);
+        } else if (max == fg) {
+            h = ((fb - fr) / delta) + 2.0f;
+        } else {
+            h = ((fr - fg) / delta) + 4.0f;
+        }
+        // Converte o resultado para graus
+        h *= 60.0f;
+        // Garante que a matiz é sempre positiva
+        if (h < 0.0f) h += 360.0f;
+    }
+
+    // Calcula a saturação: zero se máximo for zero (preto), senão a proporção
+    // delta/max
+    float s = (max == 0.0f) ? 0.0f : delta / max;
+    // O valor (brilho) é o valor máximo entre R, G e B normalizado
+    float v = max;
+
+    return {h, s, v};
+}
+
+float distance(Color a, Color b) {
+    HSV ha = rgb_to_hsv(a.R, a.G, a.B);
+    HSV hb = rgb_to_hsv(b.R, b.G, b.B);
+
+    // Diferença de hue
+    float dh = fabsf(ha.H - hb.H);
+    if (dh > 180.0f) dh = 360.0f - dh;
+
+    float ds = fabsf(ha.S - hb.S);
+    float dv = fabsf(ha.V - hb.V);
+
+    // Se saturação for muito baixa, a cor é cinzenta/branca/preta: ignora Hue
+    bool low_sat_a = ha.S < 0.2f;
+    bool low_sat_b = hb.S < 0.2f;
+
+    float peso_h = 1.0f;
+    float peso_s = 0.5f;
+    float peso_v = 0.5f;
+
+    if (low_sat_a && low_sat_b) {
+        peso_h = 0.0f;  // cor sem hue relevante
+        peso_s = 0.2f;
+        peso_v = 1.5f;  // brilho é o que mais conta
+    }
+
+    return peso_h * dh + peso_s * ds * 100.0f + peso_v * dv * 100.0f;
+}
 
 // Contrutor
 Camera::Camera() { startCamera(); }
@@ -194,4 +267,103 @@ void Camera::startCamera() {
 
     // Pin do LED
     pinMode(LED_PIN, OUTPUT);
+}
+
+// Agrupa as cores em 6 grupos
+void Camera::grouping_colors(Color cores[54], int labels[54]) {
+    int idxs_ref[6] = {4, 13, 22, 31, 40, 49};  // centros
+    int grup_size[6] = {1, 1, 1, 1, 1, 1};      // tamanho do grupo
+    float distances[6][54] = {};  // distancias dos centros a cada peça
+    // Número da peça que está mais próximo de cada centro
+    int lowest_dist_center_idx[6] = {};
+    // Distancia entre o centro e a peça indicada a cima
+    float lowest_dist_center[6] = {};
+
+    // Reset ao label
+    for (int i = 0; i < 54; i++) {
+        labels[i] = -1;
+    }
+
+    // Percorrer centros
+    for (int i = 0; i < 6; i++) {
+        labels[idxs_ref[i]] = i;
+        lowest_dist_center[i] = MAXFLOAT;
+        lowest_dist_center_idx[i] = -1;
+        // Obter todas as distancias
+        for (int j = 0; j < 54; j++) {
+            if (idxs_ref[i] != j) {
+                distances[i][j] = distance(cores[idxs_ref[i]], cores[j]);
+            } else {
+                distances[i][j] = MAXFLOAT;
+            }
+        }
+    }
+
+    // Obter todas a peça mais próxima de cada centro
+    for (int i = 0; i < 6; i++) {
+        for (int j = 0; j < 54; j++) {
+            int is_ref = 0;
+            // Se a peça fro ela própria ou ouro centro
+            for (int k = 0; k < 6; k++) {
+                if (j == idxs_ref[k]) {
+                    is_ref = 1;
+                    break;
+                };
+            }
+            if (!is_ref) {
+                if (distances[i][j] < lowest_dist_center[i]) {
+                    lowest_dist_center[i] = distances[i][j];
+                    lowest_dist_center_idx[i] = j;
+                }
+            }
+        }
+    }
+
+    // Executar o número de peças existentes exceto os centros
+    for (int i = 0; i < 54 - 6; i++) {
+        int lowest_idx = -1;
+
+        // Verificar qual dos centros tem a peça mais próxima
+        for (int j = 0; j < 6; j++) {
+            if (grup_size[j] >= 9) continue; // tamnho máximo é 9
+            if (lowest_idx == -1) {
+                lowest_idx = j;
+            }
+            if (lowest_dist_center[j] < lowest_dist_center[lowest_idx]) {
+                lowest_idx = j;
+            }
+        }
+        // Alterar o label
+        int idx = lowest_dist_center_idx[lowest_idx];
+        labels[idx] = lowest_idx;
+        grup_size[lowest_idx]++;
+
+        // Atualizar lista de peças mais próxima de cada centro
+        for (int k = 0; k < 6; k++) {
+            distances[k][idx] = MAXFLOAT;
+            if (lowest_dist_center_idx[k] == idx) {
+                // Reset às variaveis
+                lowest_dist_center[k] = MAXFLOAT;
+                lowest_dist_center_idx[k] = -1;
+
+                for (int j = 0; j < 54; j++) {
+                    int is_ref = 0;
+                    // Não pode ser centro
+                    for (int l = 0; l < 6; l++) {
+                        if (j == idxs_ref[l]) {
+                            is_ref = 1;
+                            break;
+                        };
+                    }
+                    // Não pode ter valor atribuido nem ser centro
+                    if (labels[j] == -1 && !is_ref) {
+                        if (distances[k][j] < lowest_dist_center[k]) {
+                            lowest_dist_center[k] = distances[k][j];
+                            lowest_dist_center_idx[k] = j;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
