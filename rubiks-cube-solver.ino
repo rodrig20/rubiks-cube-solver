@@ -1,28 +1,71 @@
 #include <Arduino.h>
 
-// Incluir a biblioteca correta com base na plataforma
-#ifdef ESP32
 #include <WebServer.h>
 #include <WiFi.h>
-#else
-#include <ESP8266WebServer.h>
-#include <ESP8266WiFi.h>
-#endif
 #include <LittleFS.h>
+#include "esp_camera.h"
+#include "esp_jpg_decode.h"
+#include "img_converters.h"
+
 
 #include "Solver.hpp"
+#include "Camera.hpp"
 #include "Robot.hpp"
 
 const char* ssid = "CubeSolver";
 const char* password = "#cubeSolver";
 
-Solver cube("054305225013310135223124124533035111423144040402550245");
-#ifdef ESP32
-WebServer server(80);
-#else
-ESP8266WebServer server(80);
-#endif
 
+Solver cube("054305225013310135223124124533035111423144040402550245");
+Camera cam = Camera();
+
+WebServer server(80);
+
+const int LED_PIN = 4;
+
+void handleCapture() {
+  for (int i = 0; i < 6; ++i) {
+      auto fb_temp = esp_camera_fb_get();
+      esp_camera_fb_return(fb_temp);
+  }
+  camera_fb_t* fb = esp_camera_fb_get();
+  if (!fb) {
+    server.send(500, "text/plain", "Erro ao capturar imagem");
+    return;
+  }
+
+  Color* cube_state = cam.get_color_face(fb);
+  Serial.println("=================");
+  for (int i = 0; i < 9; i++) {
+    Serial.printf("[%d, %d, %d]\n", cube_state[i].R, cube_state[i].G, cube_state[i].B);
+  }
+
+  delete[] cube_state;
+  cube_state = nullptr;
+
+  uint8_t* jpeg_buf = nullptr;
+  size_t jpeg_len = 0;
+
+  bool success = fmt2jpg(fb->buf, fb->len, fb->width, fb->height, PIXFORMAT_RGB565, 80, &jpeg_buf, &jpeg_len);
+  WiFiClient client = server.client();
+  if (!client || !success) {
+    esp_camera_fb_return(fb);
+    return;
+  }
+
+
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-Type: image/jpeg");
+  client.print("Content-Length: ");
+  client.println(jpeg_len);
+  client.println();
+  client.write(jpeg_buf, jpeg_len);
+  client.stop();
+
+  free(jpeg_buf);
+
+  esp_camera_fb_return(fb);
+}
 
 // Envia ficheiro do LittleFS para o cliente
 void serveFile(const String& path, const String& contentType) {
@@ -78,6 +121,8 @@ void setupRoutes() {
   server.on("/scramble", HTTP_GET, []() {
     server.send(200, "text/plain", String(cube.scramble(20).c_str()));
   });
+
+  server.on("/capture", HTTP_GET, handleCapture);
 }
 
 
@@ -123,6 +168,8 @@ void setup() {
   Serial.println("\nRede Wi-Fi criada!");
   Serial.print("Endereço IP do AP: ");
   Serial.println(WiFi.softAPIP());
+
+  cam.startCamera();
 
   // Iniciar rotas
   setupRoutes();
