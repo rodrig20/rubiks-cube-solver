@@ -99,7 +99,9 @@ Color* Camera::get_color_face(camera_fb_t* fb) {
     return cube_state;
 }
 
+// Inicializa a camara
 void Camera::startCamera() {
+    // Configuração da camara para Ai-Thinker
     camera_config_t config;
     config.ledc_channel = LEDC_CHANNEL_0;
     config.ledc_timer = LEDC_TIMER_0;
@@ -120,47 +122,32 @@ void Camera::startCamera() {
     config.pin_pwdn = PWDN_GPIO_NUM;
     config.pin_reset = RESET_GPIO_NUM;
     config.xclk_freq_hz = 20000000;
-    config.frame_size = FRAMESIZE_240X240;
+    config.frame_size = FRAMESIZE_128X128;
     config.pixel_format = PIXFORMAT_RGB565;
     config.fb_location = CAMERA_FB_IN_PSRAM;
 
-    config.fb_count = 2;
+    config.fb_count = 5;
     config.grab_mode = CAMERA_GRAB_LATEST;
-    std::cout << "RUN1\n";
     esp_err_t err = esp_camera_init(&config);
     if (err != ESP_OK) {
         printf("Erro ao iniciar a câmara: 0x%x", err);
         return;
     }
 
-    std::cout << "RUN2\n";
-
+    // Configuarar Sensor
     sensor_t* s = esp_camera_sensor_get();
-    s->set_brightness(s, 1);     // [-2,2]
-    s->set_contrast(s, 2);       // [-2,2]
-    s->set_saturation(s, 2);     // [-2,2]
-    s->set_whitebal(s, 1);       // 0 = off, 1 = on
-    s->set_awb_gain(s, 1);       // White balance gain
-    s->set_gain_ctrl(s, 1);      // Auto Gain Control
-    s->set_exposure_ctrl(s, 1);  // Auto Exposure Control
-}
 
-void Camera::capture() {
-    for (int i = 0; i < 6; ++i) {
-        camera_fb_t* fb_temp = esp_camera_fb_get();
-        esp_camera_fb_return(fb_temp);
-    }
-    camera_fb_t* fb = esp_camera_fb_get();
+    s->set_agc_gain(s, 0);                    // Desativa ganho automático
+    s->set_gainceiling(s, (gainceiling_t)2);  // Garante pouco ganho
 
-    Color* cube_state = get_color_face(fb);
-    std::cout << "=================\n";
-    for (int i = 0; i < 9; i++) {
-        std::cout << "[" << cube_state[i].R << ", " << cube_state[i].G << ", "
-                  << cube_state[i].B << "]\n";
-    }
+    s->set_aec2(s, 0);           // Desativa AEC2
+    s->set_exposure_ctrl(s, 0);  // Controlo manual da exposição
+    s->set_aec_value(s, 85);     // Define expoisção manualmente
 
-    delete[] cube_state;
-    cube_state = nullptr;
+    s->set_brightness(s, 1);  // Reduz brilho
+    s->set_saturation(s, 3);  // Aumenta muito a saturação
+    s->set_contrast(s, 2);    // Contraste normal
 
-    esp_camera_fb_return(fb);
+    // Pin do LED
+    pinMode(LED_PIN, OUTPUT);
 }
