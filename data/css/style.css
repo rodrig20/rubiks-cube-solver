@@ -3,36 +3,266 @@ body {
 	height: 100%;
 	margin: 0px;
 	overflow: hidden;
-}
-
-body {
-	background-color: #c2c2c2;
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 	color: white;
 	text-shadow: 0px 1px 1px black;
 	text-align: center;
-	font-family: sans-serif;
 }
 
+/* Container principal */
+.main-container {
+	display: flex;
+	height: 100vh;
+	width: 100vw;
+	position: relative;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	overflow: hidden;
+}
+
+/* Título */
 h1 {
-	text-align: center;
-	margin-top: 0px;
-	padding-top: 1em;
+	position: absolute;
+	top: 20px;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 1000;
+	margin: 0;
+	padding: 7px 15px;
+	font-size: 2rem;
+	font-weight: 700;
+	color: #ffffff;
+	text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-footer {
-	position: fixed;
-	text-align: center;
+/* Div dos botões */
+.button-container {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: flex-start;
+	gap: 20px;
+	padding: 25px;
+	width: 30vw;
+	height: 100vh;
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	overflow-y: auto;
+	position: relative;
+}
+
+/* Grupos de botões */
+.button-group {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
 	width: 100%;
-	left: 0px;
-	bottom: 3px;
-	font-size: 90%;
+	align-items: center;
 }
 
-a {
+.button-group-title {
+	font-size: 1.1rem;
+	font-weight: 600;
+	color: rgb(255, 255, 255);
+	text-align: center;
+	margin-bottom: 8px;
+	width: 100%;
+}
+
+/* Estilização dos botões */
+.button-container button {
+	flex: 0 1 auto;
+	min-width: 120px;
+	max-width: 200px;
+	width: 100%;
+	padding: 14px 18px;
+	font-size: 0.95rem;
+	font-weight: 600;
+	border: 2px solid #e0e0e0;
+	border-radius: 10px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+	position: relative;
+	overflow: hidden;
+	background: linear-gradient(135deg,#562383, #7174bf);
 	color: white;
+	border-color: transparent;
+}
+
+.button-container button:hover {
+	background: linear-gradient(135deg, #6a2b9e, #8a8fd8);
+	transform: scale(1.05);
+	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.button-container button:active {
+	transform: scale(1.01);
+}
+
+/* Grupo da sequência */
+.sequence-group {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	width: 100%;
+	padding: 15px;
+	background: rgba(255, 255, 255, 0.1);
+	border-radius: 12px;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	box-sizing: border-box;
+	align-items: center;
+}
+
+/* Estilização do input */
+.button-container input {
+	padding: 14px 18px;
+	border-radius: 10px;
+	border: 2px solid #e0e0e0;
+	font-size: 0.95rem;
+	width: 100%;
+	box-sizing: border-box;
+	background: #ffffff;
+	color: #333;
+	transition: all 0.25s ease;
+	box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.button-container input::placeholder {
+	color: #999;
+	font-style: italic;
+}
+
+.button-container input:focus {
+	outline: none;
+	border-color: #667eea;
+	box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+	background: #ffffff;
+}
+
+/* Popup */
+.popup {
+	position: absolute;
+	background: rgb(247, 247, 247);
+	border-radius: 20px;
+	padding: 20px;
+	z-index: 100;
+	box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.popup p {
+	margin: 0 0 15px 0;
+	font-weight: 600;
+	color: #000000;
+	text-align: center;
+}
+
+.popup .color-btn {
+	margin: 5px;
+	padding: 10px 15px;
+	border: none;
+	border-radius: 10px;
+	cursor: pointer;
+	font-weight: 600;
+	transition: all 0.3s ease;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.popup .color-btn:hover {
+	transform: scale(1.05);
+	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.hidden {
+	display: none;
 }
 
 .face {
-	border: 2px solid black;
-	/*border-radius: 10px;*/
+	border: 2px solid rgba(0, 0, 0, 0.3);
+	box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+	transition: all 0.3s ease;
+}
+
+.face:hover {
+	border-color: rgba(255, 255, 255, 0.5);
+	box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* Landscape (largura maior que altura) */
+@media screen and (orientation: landscape) {
+	.main-container {
+		flex-direction: row;
+	}
+
+	.button-container {
+		width: 25vw;
+		height: 100vh;
+		flex-direction: column;
+		justify-content: flex-start;
+		padding-top: 30px;
+	}
+}
+
+/* Portrait (altura maior que largura) */
+@media screen and (orientation: portrait) {
+	.main-container {
+		flex-direction: column;
+	}
+	
+	.button-container {
+		width: 100vw;
+		height: 30vh;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+		overflow-x: auto;
+		order: 2;
+		gap: 15px;
+		padding: 15px;
+	}
+	
+	.button-group {
+		flex: 0 0 auto;
+		min-width: 150px;
+		max-width: 200px;
+	}
+	
+	.sequence-group {
+		flex: 0 0 auto;
+		min-width: 200px;
+		max-width: 250px;
+	}
+	
+	.button-container button {
+		padding: 10px 14px;
+		font-size: 0.9rem;
+	}
+	
+	.button-container input {
+		padding: 10px 14px;
+		font-size: 0.9rem;
+	}
+	
+	.button-group-title {
+		font-size: 0.8rem;
+		margin-bottom: 6px;
+	}
+	
+	.cube-container {
+		height: 70vh;
+		order: 1;
+		padding-top: 60px;
+		align-items: flex-start;
+	}
+}
+
+/* Div do cubo */
+.cube-container {
+	flex: 1;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	position: relative;
+	height: 100vh;
+	perspective: 460px;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
