@@ -189,6 +189,104 @@ void Robot::turn_face(int clockwise) {
     }
 }
 
+// Obtem todas as faces do cubo com a camara
+void Robot::get_faces() {
+    Color colors[54];
+
+    // Face do topo
+    grabber->to_lock();
+    Color* face1 = cam->get_color_face();
+    for (int i = 0; i < 9; i++) {
+        colors[i].R = face1[i].R;
+        colors[i].G = face1[i].G;
+        colors[i].B = face1[i].B;
+    }
+    grabber->spin(1);
+
+    // Face de trás
+    grabber->to_lock();
+    Color* face2 = cam->get_color_face();
+    for (int i = 8; i >= 0; i--) {
+        colors[3 * 9 + i].R = face2[(9 - 1) - i].R;
+        colors[3 * 9 + i].G = face2[(9 - 1) - i].G;
+        colors[3 * 9 + i].B = face2[(9 - 1) - i].B;
+    }
+    grabber->spin(1);
+
+    // Face de baixo
+    grabber->to_lock();
+    Color* face3 = cam->get_color_face();
+    for (int i = 0; i < 9; i++) {
+        colors[5 * 9 + i].R = face3[i].R;
+        colors[5 * 9 + i].G = face3[i].G;
+        colors[5 * 9 + i].B = face3[i].B;
+    }
+    grabber->spin(1);
+
+    // Face da frente
+    grabber->to_lock();
+    Color* face4 = cam->get_color_face();
+    for (int i = 0; i < 9; i++) {
+        colors[1 * 9 + i].R = face4[i].R;
+        colors[1 * 9 + i].G = face4[i].G;
+        colors[1 * 9 + i].B = face4[i].B;
+    }
+    grabber->to_default();
+    base->turn_90_aligned(1);
+    grabber->spin(1);
+
+    // Face da direita
+    grabber->to_lock();
+    Color* face5 = cam->get_color_face();
+    int c = 0;
+    for (int i = 2; i >= 0; i--) {
+        for (int j = 0; j < 3; j++) {
+            colors[2 * 9 + (i + (j * 3))].R = face5[c].R;
+            colors[2 * 9 + (i + (j * 3))].G = face5[c].G;
+            colors[2 * 9 + (i + (j * 3))].B = face5[c].B;
+            c += 1;
+        }
+    }
+    grabber->spin(2);
+
+    // Face da esquerda
+    grabber->to_lock();
+    Color* face6 = cam->get_color_face();
+    c = 0;
+    for (int i = 2; i >= 0; i--) {
+        for (int j = 0; j < 3; j++) {
+            colors[4 * 9 + (i + (j * 3))].R = face6[c].R;
+            colors[4 * 9 + (i + (j * 3))].G = face6[c].G;
+            colors[4 * 9 + (i + (j * 3))].B = face6[c].B;
+            c += 1;
+        }
+    }
+    // Voltar à posição
+    grabber->to_default();
+    grabber->spin(1);
+    base->turn_90_aligned(0);
+    grabber->spin(1);
+
+    // Apagar a memória alocada
+    delete[] face1;
+    delete[] face2;
+    delete[] face3;
+    delete[] face4;
+    delete[] face5;
+    delete[] face6;
+    int labels[54];
+
+    // Agrupar cores
+    cam->grouping_colors(colors, labels);
+
+    std::string cube_state = "";
+    for (int i = 0; i < 54; ++i) {
+        cube_state += std::to_string(labels[i]);
+    }
+
+    update_state(cube_state);
+}
+
 // Ativa a sequencia de motores para girar a face de baixo em 180º
 void Robot::turn_face_2() {
     virtual_lock();

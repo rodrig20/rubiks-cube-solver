@@ -5,7 +5,9 @@
 #include <string>
 
 #include "BaseMotor.hpp"
+#include "Camera.hpp"
 #include "GrabberMotor.hpp"
+#include "Solver.hpp"
 
 using namespace std;
 
@@ -14,19 +16,36 @@ class Robot {
     Adafruit_PWMServoDriver *pwm = nullptr;
     string cube_state = "UFRBLD";
     BaseMotor *base = nullptr;
-    GrabberMotor  *grabber = nullptr;
-    Adafruit_PWMServoDriver* initI2C();
+    GrabberMotor *grabber = nullptr;
+    Camera *cam = nullptr;
+    Adafruit_PWMServoDriver *initI2C();
+    std::string move_list = "";
     // void set_motors();
-    void default_position();
+    void init_config();
     void rotate_to_side(const char side);
-    void move_virtual(int changes[6]);
+    void change_virtual_orientation(int changes[6]);
+    void virtual_spin(int times);
+    void virtual_lock();
+    void virtual_lock_default();
+    void virtual_turn_90(int clockwise);
+    void virtual_turn_90_aligned(int clockwise);
+    void virtual_turn_180(int clockwise);
 
-   public:
+    public:
     Robot();
+    Solver *cube = nullptr;
     ~Robot();
+    void down();
+    string solve();
+    string scramble(int size);
+    std::array<std::array<int, 3>, 26> piece_state();
+    void get_faces();
     void turn_face(int clockwise);
     void turn_face_2();
-    void move(const string move_sequence);
+    void virtual_move(const string move_sequence);
+    void update(const string move_sequence);
+    void update_state(const string new_state);
+    void run();
 };
 
 #endif
