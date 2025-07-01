@@ -840,7 +840,7 @@ string Solver::revert_move(const string move_string) {
             final_moves.push_back("L");
         } else if (move == "L") {
             rot_L(-1);
-            final_moves.push_back("L");
+            final_moves.push_back("L'");
         } else if (move == "D2") {
             rot_D(2);
             final_moves.push_back("D2");
@@ -978,6 +978,8 @@ string Solver::EO() {
     }
 
     int edge_ori = get_edge_ori_coord();
+
+    cout << "EDGE_ORI: " << edge_ori << endl;
 
     File file = LittleFS.open(EO_Path, "r");
     for (int i = 0; i < edge_ori; i++) {
@@ -1583,6 +1585,7 @@ string Solver::solve() {
         return "-";
     }
     move_sequence += move_sequence_EO + " ";
+    cout << move_sequence_EO << endl;
 
     // Resolve cross
     string move_sequence_cross = cross();
@@ -1590,6 +1593,7 @@ string Solver::solve() {
         return "-";
     }
     move_sequence += move_sequence_cross + " ";
+    cout << move_sequence_cross << endl;
 
     // Resolve F2L
     string move_sequence_F2L = F2L();
@@ -1597,6 +1601,7 @@ string Solver::solve() {
         return "-";
     }
     move_sequence += move_sequence_F2L + " ";
+    cout << move_sequence_F2L << endl;
 
     // Resolve ZBLL
     string move_sequence_ZBLL = ZBLL();
@@ -1605,7 +1610,11 @@ string Solver::solve() {
     }
     move_sequence += move_sequence_ZBLL;
 
-    return simplify_move(move_sequence);
+    cout << move_sequence_ZBLL << endl;
+
+
+    //return simplify_move(move_sequence);
+    return move_sequence;
 }
 
 // Verificar se o cubo está resolvido
