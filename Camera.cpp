@@ -6,7 +6,8 @@
 
 uint16_t swap_endian(uint16_t value) { return (value >> 8) | (value << 8); }
 
-Camera::Camera() {}
+// Contrutor
+Camera::Camera() { startCamera(); }
 
 // Faz a conversão de RGB565 para RGB
 void Camera::rgb565ToRGB(uint16_t color, uint8_t& r, uint8_t& g, uint8_t& b) {
