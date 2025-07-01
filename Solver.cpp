@@ -984,7 +984,6 @@ string Solver::EO() {
     file.close();
 
     return revert_move(move_sequence);
-    ;
 }
 
 // Resolve a etapa da cruz
@@ -1297,10 +1296,18 @@ string Solver::F2L() {
                 if (on_cross_layer == 0) {
                     // Girar a camada oposta à da cruz, até que o corner
                     // fique em na mesma coluna do seu lugar
-                    while (corners[corner_pos].pair(secundary_color,
-                                                    tertiary_color) == 0) {
+                    for (int i = 0; i < 4; i++) {
+                        if (corners[corner_pos].pair(secundary_color,
+                                                    tertiary_color) == 1) {
+                            break;
+                        }
                         move("D");
                         move_sequence += " D";
+                        }
+                    // Se não encontrou o corner na posição correta após 4 tentativas, retorna erro
+                    if (corners[corner_pos].pair(secundary_color,
+                                                tertiary_color) == 0) {
+                        return "-";
                     }
                     tuple<int, int> vals = {secundary_color, tertiary_color};
                     for (int edge_pos = 4; edge_pos < 8; edge_pos++) {
@@ -1357,9 +1364,16 @@ string Solver::F2L() {
                     tuple<int, int> vals = {secundary_color, tertiary_color};
                     // Girar a camada oposta à da cruz, até que a edge fique
                     // na edge_pos
-                    while (edges[edge_pos].colors() != vals) {
+                    for (int i = 0; i < 4; i++) {
+                        if (edges[edge_pos].colors() == vals) {
+                            break;
+                        }
                         move("D");
                         move_sequence += " D";
+                    }
+                    // Se não encontrou a edge após 4 tentativas, retorna erro
+                    if (edges[edge_pos].colors() != vals) {
+                        return "-";
                     }
                     string corner_ori;
                     // Se a peça não tiver de ir para frente-direita ou
