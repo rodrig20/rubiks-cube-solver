@@ -502,6 +502,9 @@ int Solver::check_state_OLL() {
 
 // Obtem um json com o estado e o seu respetivo algoritmo para resolver
 void Solver::get_algs(const char* json_path, JsonDocument& doc) {
+    // Inicializar o documento como vazio
+    doc.clear();
+
     // Abrir o arquivo JSON no path especificado
     File file = LittleFS.open(json_path, "r");
     if (!file) {
@@ -522,6 +525,7 @@ void Solver::get_algs(const char* json_path, JsonDocument& doc) {
     // Verifica se ocorreu algum erro durante o parsing
     if (error) {
         cout << "Falha ao aplicar parse do JSON: " << error.f_str() << endl;
+        doc.clear(); // Garantir que o documento fica vazio em caso de erro
         return;
     }
 }
@@ -1303,7 +1307,7 @@ string Solver::F2L() {
                         }
                         move("D");
                         move_sequence += " D";
-                        }
+                    }
                     // Se não encontrou o corner na posição correta após 4 tentativas, retorna erro
                     if (corners[corner_pos].pair(secundary_color,
                                                 tertiary_color) == 0) {
@@ -1544,12 +1548,24 @@ string Solver::ZBLL() {
         StaticJsonDocument<1024 * 5> ZBLL_ALGS;
         get_algs(ZBLL_Path[ZBLL_type], ZBLL_ALGS);
         string last_layer_state_str = array_to_string(last_layer_state, 16);
+
+        // Verificar se o estado existe no JSON
+        if (!ZBLL_ALGS.containsKey(last_layer_state_str)) {
+            return "-";
+        }
+
         move_sequence += ZBLL_ALGS[last_layer_state_str].as<string>();
     // Obter o Json caso seja uma PLL
     } else {
         StaticJsonDocument<1024> PLL_ALGS;
         get_algs(PLL_Path, PLL_ALGS);
         string last_layer_state_str = array_to_string(last_layer_state, 12);
+
+        // Verificar se o estado existe no JSON
+        if (!PLL_ALGS.containsKey(last_layer_state_str)) {
+            return "-";
+        }
+
         move_sequence += PLL_ALGS[last_layer_state_str].as<string>();
     }
 
