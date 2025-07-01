@@ -8,21 +8,21 @@
 #include <string>
 
 #include "BaseMotor.hpp"
+#include "Camera.hpp"
 #include "GrabberMotor.hpp"
+#include "Solver.hpp"
 
 // Inicia a comunicação I2C
 Adafruit_PWMServoDriver* Robot::initI2C() {
-    pwm = new Adafruit_PWMServoDriver(0x40);
-
+    Adafruit_PWMServoDriver* new_pwm = new Adafruit_PWMServoDriver(0x40);
     Wire.begin(14, 15);
-    pwm->begin();
-    pwm->setPWMFreq(50);
-
-    return pwm;
+    new_pwm->begin();
+    new_pwm->setPWMFreq(50);
+    return new_pwm;
 }
 
 // Move os dois motores para a posição padrão
-void Robot::default_position() {
+void Robot::init_config() {
     base->to_default();
     grabber->to_default();
 }
@@ -91,15 +91,28 @@ void Robot::rotate_to_side(const char side) {
     }
 }
 
-Robot::Robot()
-    : pwm(initI2C()),
-      base(new BaseMotor(pwm, 0)),
-      grabber(new GrabberMotor(pwm, 1)) {
+// Construtor
+Robot::Robot() {
+    this->cube = new Solver(Solver::solved_string());
+    this->pwm = initI2C();
+
+    // Inicializar motores/câmara
     if (!pwm) {
         return;
     }
-    initI2C();
-    default_position();
+    this->cam = new Camera();
+    this->base = new BaseMotor(this->pwm, 0);
+    this->grabber = new GrabberMotor(this->pwm, 1);
+
+    init_config();
+
+    // Pisca o LED para indicar que está pronto
+    for (int i = 0; i < 3; i++) {
+        analogWrite(LED_PIN, LED_BRIGHTNESS);
+        delay(75);
+        analogWrite(LED_PIN, 0);
+        delay(75);
+    }
 }
 
 // Ativa a sequencia de motores para girar a face de baixo em 90º
@@ -149,8 +162,11 @@ void Robot::move(const string move_string) {
     }
 }
 
+// Desconstrutor
 Robot::~Robot() {
     delete pwm;
+    delete cube;
     delete base;
     delete grabber;
+    delete cam;
 }
