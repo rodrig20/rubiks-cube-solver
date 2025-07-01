@@ -15,6 +15,8 @@ class Motor {
 
    protected:
     void turn_to(int angle);
+    void turn_fast_to(int angle);
+
 
    public:
     Motor(Adafruit_PWMServoDriver* pwm, int motor_id);
