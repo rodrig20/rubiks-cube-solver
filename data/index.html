@@ -9,104 +9,83 @@
 	<title>Rubik's Cube</title>
 
 	<link rel="stylesheet" href="css/style.css">
-	<script src="js/app.js" defer></script>
-
-	<style>
-		.responsive-div {
-			position: fixed;
-			display: flex;
-			flex-wrap: wrap;
-			justify-content: center;
-			align-items: center;
-			gap: 10px;
-			padding: 10px;
-			width: 30vw;
-			height: 25vh;
-			background: #3498db;
-			z-index: 1000;
-			border-radius: 10px;
-			box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
-		}
-
-		/* Landscape (largura maior que altura) */
-		@media screen and (orientation: landscape) {
-			.responsive-div {
-				left: 0;
-				top: 0;
-				height: 100vh;
-				flex-direction: column;
-				justify-content: flex-start;
-				padding-top: 20px;
-				overflow-y: auto;
-			}
-		}
-
-		/* Portrait (altura maior que largura) */
-		@media screen and (orientation: portrait) {
-			.responsive-div {
-				left: 0;
-				bottom: 0;
-				width: 100vw;
-				flex-direction: row;
-				justify-content: center;
-				overflow-x: auto;
-			}
-		}
-
-		/* Estilização dos botões */
-		.responsive-div button {
-			flex: 0 1 auto;
-			min-width: 80px;
-			max-width: 150px;
-			width: 80%;
-			padding: 10px;
-			font-size: 1rem;
-			background-color: #ffffff;
-			border: 2px solid #2980b9;
-			border-radius: 5px;
-			cursor: pointer;
-			transition: background 0.2s, transform 0.1s;
-		}
-
-		.responsive-div button:hover {
-			background: #2980b9;
-			color: #ffffff;
-		}
-
-		.responsive-div button:active {
-			transform: scale(0.95);
-		}
-
-		/* Estilização do input */
-		.responsive-div input {
-			padding: 8px;
-			border-radius: 5px;
-			border: 1px solid #2980b9;
-			font-size: 1rem;
-			width: 80%;
-			max-width: 200px;
-		}
-	</style>
+	<script src="js/oz.js"></script>
+	<script src="js/css3.oz.js"></script>
+	<script src="js/rubik.js"></script>
+	<script src="js/quaternion.js"></script>
+	<script src="js/custom.js"></script>
 </head>
 
 <body>
 
-	<h1>Rubik's Cube</h1>
+	<div class="main-container">
+		<div class="button-container" id="button-container">
+			<!-- Grupo de ações principais -->
+			<div class="button-group">
+				<div class="button-group-title">Ações Principais</div>
+				<button onclick="solve()">Resolver</button>
+				<button onclick="scramble()">Baralhar</button>
+			</div>
 
-	<div class="responsive-div" id="button-container">
-		<button onclick="scramble()">Scramble</button>
-		<button onclick="solve()">Solve</button>
+			<!-- Grupo de configurações -->
+			<div class="button-group">
+				<div class="button-group-title">Estado do Cubo</div>
+				<button onclick="resetOrientation()">Normalizar Orientação</button>
+				<button onclick="scan()">Ler Cubo</button>
+				<button onclick="alert('Falta implementar ainda')">Reset</button>
+			</div>
 
-		<button onclick="applyMoveSequence()">Apply Move Sequence</button>
-		<input type="text" id="move-sequence" placeholder="Sequence">
+			<!-- Grupo da sequência de movimentos -->
+			<div class="sequence-group">
+				<div class="button-group-title">Sequência de Movimentos</div>
+				<input type="text" id="move-sequence" placeholder="Ex: R U R' U'">
+				<button onclick="applyMoveSequence()">Aplicar Sequência</button>
+			</div>
+		</div>
 
+		<div class="cube-container" id="cube-container">
+			<h1>Rubik's Cube</h1>
+			<!-- O cubo será renderizado aqui -->
+		</div>
 	</div>
+
+	<div id="popup" class="popup hidden">
+		<p>Escolhe uma cor:</p>
+		<button class="color-btn" data-color="white" style="background:white; border:1px solid #ccc;">Branco</button>
+		<button class="color-btn" data-color="yellow" style="background:yellow;">Amarelo</button>
+		<button class="color-btn" data-color="red" style="background:red;">Vermelho</button>
+		<button class="color-btn" data-color="orange" style="background:orange;">Laranja</button>
+		<button class="color-btn" data-color="blue" style="background:blue; color:white;">Azul</button>
+		<button class="color-btn" data-color="green" style="background:green; color:white;">Verde</button>
+	  </div>
 
 	<script>
 		window.addEventListener('load', function () {
 			getCube();
 		});
+
+		const popup = document.getElementById("popup");
+
+		document.querySelectorAll(".cube").forEach(face => {
+			face.addEventListener("click", (e) => {
+				const rect = e.target.getBoundingClientRect();
+
+				// posiciona o popup junto à div clicada
+				popup.style.left = `${rect.left + window.scrollX}px`;
+				popup.style.top = `${rect.bottom + window.scrollY}px`;
+
+				popup.classList.remove("hidden");
+			});
+		});
+
+		// Clicar fora fecha o popup
+		document.addEventListener("click", (e) => {
+		if (!popup.contains(e.target) && !e.target.classList.contains("face")) {
+			popup.classList.add("hidden");
+		}
+		});
 	</script>
+
 
 </body>
 
