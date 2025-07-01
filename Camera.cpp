@@ -4,7 +4,8 @@
 
 #include "esp_camera.h"
 
-uint16_t swap_endian(uint16_t value) { return (value >> 8) | (value << 8); }
+// Troca a ordem de dois bytes
+uint16_t byte_swap(uint16_t value) { return (value >> 8) | (value << 8); }
 
 // Contrutor
 Camera::Camera() { startCamera(); }
@@ -17,14 +18,17 @@ void Camera::rgb565ToRGB(uint16_t color, uint8_t& r, uint8_t& g, uint8_t& b) {
     b = (color & 0x1F) << 3;          // 5 bits para 8 bits
 }
 
+// Obtem a cor média de uma peça
 Color Camera::get_color_piece(camera_fb_t* fb, int posx, int posy, int size) {
-    int piece_padding = size / 5;
+    int piece_padding = size / 4;
     uint16_t* pixels = (uint16_t*)fb->buf;
 
+    // Inicializar valores para media
     int r_sum = 0;
     int g_sum = 0;
     int b_sum = 0;
 
+    // Inicializar variaveis
     int x_start = posx + piece_padding;
     int y_start = posy + piece_padding;
 
@@ -33,14 +37,18 @@ Color Camera::get_color_piece(camera_fb_t* fb, int posx, int posy, int size) {
 
     int stride_px = (fb->len / fb->height) / 2;
     int area = 0;
+
+    // Percorrer area para a média de cor
     for (int y = y_start; y < y_end; y++) {
         for (int x = x_start; x < x_end; x++) {
             int idx = y * fb->width + x;
-            uint16_t pixel = swap_endian(pixels[idx]);
+            // Obter pixel invertido
+            uint16_t pixel = byte_swap(pixels[idx]);
 
             uint8_t r;
             uint8_t g;
             uint8_t b;
+            // Converter para RGB e adicionar para media
             rgb565ToRGB(pixel, r, g, b);
             r_sum += r;
             g_sum += g;
@@ -48,14 +56,17 @@ Color Camera::get_color_piece(camera_fb_t* fb, int posx, int posy, int size) {
             area++;
         }
     }
+    // Retorna cor
     Color color = {(r_sum / area), (g_sum / area), (b_sum / area)};
     return color;
 }
 
+// Desenha a borda da área da média
 void Camera::draw(camera_fb_t* fb, int posx, int posy, int size) {
-    int piece_padding = size / 5;
+    int piece_padding = size / 4;
     uint16_t* pixels = (uint16_t*)fb->buf;
 
+    // Inicializar variaveis
     int x_start = posx + piece_padding;
     int y_start = posy + piece_padding;
 
@@ -64,10 +75,11 @@ void Camera::draw(camera_fb_t* fb, int posx, int posy, int size) {
 
     int stride_px = (fb->len / fb->height) / 2;
 
+    // Percorrer area para a média de cor
     for (int y = y_start; y < y_end; y++) {
         for (int x = x_start; x < x_end; x++) {
             int idx = y * fb->width + x;
-
+            // Desenhar
             if (y < y_start + 2 || y >= y_end - 2 || x < x_start + 2 ||
                 x >= x_end - 2) {
                 uint16_t new_pixel = ~0;
@@ -78,22 +90,53 @@ void Camera::draw(camera_fb_t* fb, int posx, int posy, int size) {
 }
 
 // Obtem a lista de cores de cores de uma face
-Color* Camera::get_color_face(camera_fb_t* fb) {
-    int cube_padding = fb->height / 10;
-    int size = (fb->height - (2 * cube_padding)) / 3;
+Color* Camera::get_color_face() {
+    // Liga o LED
+    analogWrite(LED_PIN, LED_BRIGHTNESS);
+    delay(500);
+    analogWrite(LED_PIN, 0);
+    delay(LED_BRIGHTNESS_DELAY);
+
+    // Obtém a imagem
+    camera_fb_t* fb = esp_camera_fb_get();
+    int size = (fb->height - (fb->height / 10)) / 3;
+    int cube_padding = size / 5;
     Color* cube_state = new Color[9];
 
+    // Percorre as 9 peças do cubo para ler
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
-            cube_state[(i * 3) + j] = get_color_piece(
-                fb, cube_padding + (j * size), cube_padding + (i * size), size);
+            int posx = j * size + cube_padding;
+            int posy = i * size + cube_padding / 2;
+            cube_state[(i * 3) + j] = get_color_piece(fb, posx, posy, size);
         }
     }
 
+    esp_camera_fb_return(fb);
+    return cube_state;
+}
+
+// Obtem a lista de cores de cores de uma face (debug)
+Color* Camera::get_color_face_debug(camera_fb_t* fb) {
+    int size = (fb->height - (fb->height / 10)) / 3;
+    int cube_padding = size / 5;
+    Color* cube_state = new Color[9];
+
+    // Percorre as 9 peças do cubo para ler
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
-            draw(fb, cube_padding + (j * size), cube_padding + (i * size),
-                 size);
+            int posx = j * size + cube_padding;
+            int posy = i * size + cube_padding;
+            cube_state[(i * 3) + j] = get_color_piece(fb, posx, posy, size);
+        }
+    }
+
+    // Percorre as 9 peças do cubo para desenhar borda
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            int posx = j * size;
+            int posy = i * size;
+            draw(fb, posx, posy, size);
         }
     }
 

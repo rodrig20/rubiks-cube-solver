@@ -1,6 +1,8 @@
 #ifndef CAMERA_HPP
 #define CAMERA_HPP
 
+#include <Arduino.h>
+
 #include "esp_camera.h"
 
 // Pinos da câmara (modelo AI-Thinker ESP32-CAM com OV2640)
@@ -22,21 +24,32 @@
 #define HREF_GPIO_NUM 23
 #define PCLK_GPIO_NUM 22
 
+#define LED_PIN 4
+#define LED_BRIGHTNESS 22
+#define LED_BRIGHTNESS_DELAY 50
+
 typedef struct {
     uint8_t R;
     uint8_t G;
     uint8_t B;
 } Color;
 
+typedef struct {
+    float H;  // 0-360
+    float S;  // 0-1
+    float V;  // 0-1
+} HSV;
+
 class Camera {
    public:
     Camera();
     void rgb565ToRGB(uint16_t color, uint8_t& r, uint8_t& g, uint8_t& b);
     Color get_color_piece(camera_fb_t* fb, int posx, int posy, int size);
-    Color* get_color_face(camera_fb_t* fb);
-    void draw(camera_fb_t* fb, int posx, int posy, int size);
+    Color* get_color_face();
+    Color* get_color_face_debug(camera_fb_t* fb);
+    static void draw(camera_fb_t* fb, int posx, int posy, int size);
     void startCamera();
-    void capture();
+    void grouping_colors(Color cores[54], int labels[54]);
 };
 
 #endif
