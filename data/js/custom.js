@@ -271,3 +271,22 @@ function resetOrientation() {
 	showCenterLetters();
 	sendCubeStateUpdate();
 }
+
+
+async function reset() {
+	if (enbable_manual_move) {
+		enbable_manual_move = false;
+		// Remove o cubo existente do DOM se existir
+		if (rubik && rubik._node && rubik._node.parentNode) {
+			rubik._node.parentNode.removeChild(rubik._node);
+		}
+
+		try {
+			await fetch('/reset', { method: 'POST' })
+		} catch (err) {
+			console.error('Erro ao fazer o POST:', err)
+		}
+		rubik = new Rubik("[[0, 1, 2],[0, -1, 2],[0, 3, 2],[-1, 1, 2],[2, 2, 2],[-1, 3, 2],[5, 1, 2],[5, -1, 2],[5, 3, 2],[0, 1, -1],[0, 0, 0],[0, 3, -1],[1, 1, 1],[3, 3, 3],[5, 1, -1],[5, 5, 5],[5, 3, -1],[0, 1, 4],[0, -1, 4],[0, 3, 4],[-1, 1, 4],[4, 4, 4],[-1, 3, 4],[5, 1, 4],[5, -1, 4],[5, 3, 4]]");
+		enbable_manual_move = true;
+	}
+}
