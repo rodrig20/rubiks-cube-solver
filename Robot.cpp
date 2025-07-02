@@ -23,8 +23,10 @@ Adafruit_PWMServoDriver* Robot::initI2C() {
 
 // Move os dois motores para a posição padrão
 void Robot::init_config() {
-    base->to_default();
-    grabber->to_default();
+    // base->to_default();
+    // grabber->to_default();
+    virtual_lock_default();
+    virtual_turn_90_aligned(0);
 }
 
 // Aplica um movimento ao cubo causado pelas rotações da base
@@ -94,7 +96,7 @@ void Robot::rotate_to_side(const char side) {
 // Passar o movimento spin para o buffer
 void Robot::virtual_spin(int times) {
     for (int i = 0; i < times; i++) {
-        this->move_list += "S ";
+        this->move_list += "U P ";
     }
 }
 
@@ -191,6 +193,10 @@ void Robot::turn_face(int clockwise) {
 
 // Obtem todas as faces do cubo com a camara
 void Robot::get_faces() {
+    this->move_list = "";
+    init_config();
+    this->cube_state = "UFRBLD";
+
     Color colors[54];
 
     // Face do topo
@@ -321,7 +327,6 @@ void Robot::update(const string move_string) {
     virtual_move(move_string);
 }
 
-
 void Robot::update_state(const string new_state) {
     this->move_list = "";
     init_config();
@@ -338,47 +343,68 @@ void Robot::reset() {
 
 // Função chamada em loop para minimizar bloqueios na UI
 void Robot::run() {
-    //  Remover espaços iniciais
-    size_t start = move_list.find_first_not_of(' ');
-    if (start != std::string::npos)
-        move_list = move_list.substr(start);
-    else
-        move_list.clear();  // A string é só espaços
-
-    if (move_list.empty()) return;  // Nada para fazer
-
-    // Encontrar o fim da primeira palavra
-    size_t end = move_list.find(' ');
-
-    // Extrair o primeiro movimento
     std::string move_id;
-    if (end != std::string::npos) {
-        move_id = move_list.substr(0, end);
-        move_list = move_list.substr(end + 1);
-    } else {
-        move_id = move_list;
-        move_list.clear();
-    }
+    if (motor_move == MotorMove::Null) {
+        //  Remover espaços iniciais
+        size_t start = move_list.find_first_not_of(' ');
+        if (start != std::string::npos)
+            move_list = move_list.substr(start);
+        else
+            move_list.clear();  // A string é só espaços
+        if (!move_list.empty()) {
+            // Encontrar o fim da primeira palavra
+            size_t end = move_list.find(' ');
 
-    // Traduzir movimento para função
-    if (move_id == "S")
-        grabber->spin(1);
-    else if (move_id == "L")
-        grabber->to_lock();
-    else if (move_id == "P")
-        grabber->to_default();
-    else if (move_id == "A'")
-        base->turn_90_aligned(0);
-    else if (move_id == "A")
-        base->turn_90_aligned(1);
-    else if (move_id == "T'")
-        base->turn_90(0);
-    else if (move_id == "T")
-        base->turn_90(1);
-    else if (move_id == "D'")
-        base->turn_180(0);
-    else if (move_id == "D")
-        base->turn_180(1);
+            // Extrair o primeiro movimento
+            if (end != std::string::npos) {
+                move_id = move_list.substr(0, end);
+                move_list = move_list.substr(end + 1);
+            } else {
+                move_id = move_list;
+                move_list.clear();
+            }
+            // Traduzir movimento para função
+            if (move_id == "S") {
+                grabber->spin(1);
+                motor_move = MotorMove::Grabber;
+            } else if (move_id == "U") {
+                grabber->up();
+                motor_move = MotorMove::Grabber;
+            } else if (move_id == "L") {
+                grabber->to_lock();
+                motor_move = MotorMove::Grabber;
+            } else if (move_id == "P") {
+                grabber->to_default();
+                motor_move = MotorMove::Grabber;
+            } else if (move_id == "A'") {
+                base->turn_90_aligned(0);
+                motor_move = MotorMove::Base;
+            } else if (move_id == "A") {
+                base->turn_90_aligned(1);
+                motor_move = MotorMove::Base;
+            } else if (move_id == "T'") {
+                base->turn_90(0);
+                motor_move = MotorMove::Base;
+            } else if (move_id == "T") {
+                base->turn_90(1);
+                motor_move = MotorMove::Base;
+            } else if (move_id == "D'") {
+                base->turn_180(0);
+                motor_move = MotorMove::Base;
+            } else if (move_id == "D") {
+                base->turn_180(1);
+                motor_move = MotorMove::Base;
+            }
+        } else {
+            motor_move = MotorMove::Null;
+        }
+    }
+    if (motor_move == MotorMove::Grabber) {
+        if (grabber->step()) motor_move = MotorMove::Null;
+
+    } else if (motor_move == MotorMove::Base) {
+        if (base->step()) motor_move = MotorMove::Null;
+    }
 }
 
 // Desconstrutor

@@ -11,6 +11,13 @@
 
 using namespace std;
 
+
+enum class MotorMove {
+    Grabber,
+    Base,
+    Null
+};
+
 class Robot {
    private:
     Adafruit_PWMServoDriver *pwm = nullptr;
@@ -20,6 +27,7 @@ class Robot {
     Camera *cam = nullptr;
     Adafruit_PWMServoDriver *initI2C();
     std::string move_list = "";
+    MotorMove motor_move = MotorMove::Null;
     // void set_motors();
     void init_config();
     void rotate_to_side(const char side);

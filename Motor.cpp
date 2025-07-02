@@ -2,72 +2,76 @@
 
 #include <iostream>
 
-
 // Construtor que armazen o motor_id e pwm
 Motor::Motor(Adafruit_PWMServoDriver *pwm, int motor_id) {
     this->pwm = pwm;
     this->motor_id = motor_id;
 }
 
-// Gira o motor para um angulo escolhido numa velocidade normal
+// Configura o motor girar para um angulo escolhido numa velocidade normal
 void Motor::turn_to(int angle) {
-    // Se o angulo for -1 ou se a diferença de angulo for muito pequena o move é realizado sem steps
-    if (this->angle == -1 || abs(angle - this->angle) < 10) {
-        (*pwm).setPWM(motor_id, 0, angleToPulse(angle));
-        delay(23);
+    final_angle = angle;
+    // Angulo inicial
+    if (this->angle == -1) {
+        steps_remaning = 1;
     } else {
-        // Se o angulo for muito grande (>50) tem mais steps
-        int steps;
+        // Escolher o número de steps
         if (abs(angle - this->angle) > 50) {
-            steps = 30;
+            steps_remaning = 30;
         } else {
-            steps = 20;
-        }
-        // Aplicar os vários steps
-        float start = this->angle;
-        float end = angle;
-        for (int i = 1; i <= steps; i++) {
-            float intermediate_angle = start + (end - start) * i / steps;
-            (*pwm).setPWM(motor_id, 0, angleToPulse(intermediate_angle));
-            delay(23);
+            steps_remaning = 20;
         }
     }
-
-    // Atualizar angulo
-    this->angle = angle;
-    delay(345);
 }
 
-// Gira o motor para um angulo escolhido numa velocidade mais rápida
+// Configura o motor girar para um angulo escolhido numa velocidade rápida
 void Motor::turn_fast_to(int angle) {
-    // Se o angulo for -1 ou se a diferença de angulo for muito pequena o move é realizado sem steps
-    if (this->angle == -1 || abs(angle - this->angle) < 10) {
-        (*pwm).setPWM(motor_id, 0, angleToPulse(angle));
-        delay(23);
+    final_angle = angle;
+    // Angulo inicial
+    if (this->angle == -1) {
+        steps_remaning = 1;
     } else {
-        // Se o angulo for muito grande (>120) tem mais steps
-        int steps;
+        // Escolher o número de steps
         if (abs(angle - this->angle) > 120) {
-            steps = 25;
+            steps_remaning = 25;
         } else {
-            steps = 15;
+            steps_remaning = 15;
+        }
+    }
+}
+
+// Aplica um delay com millis
+void Motor::dly(int millis_time) { next_move_time = millis() + millis_time; }
+
+// Aplica o próximo passo do movimento do motor
+int Motor::step() {
+    // Verifica se já passou o tempo definido
+    if (next_move_time < millis()) {
+        // Se o angulo já chegou ao fim atualiza
+        if (current_angle == final_angle) {
+            // Atualiza e retorna que já acabou
+            this->angle = final_angle;
+            return 1;
         }
 
-        // Aplicar os vários steps
-        float start = this->angle;
-        float end = angle;
-        for (int i = 1; i <= steps; i++) {
-            float intermediate_angle = start + (end - start) * i / steps;
-            (*pwm).setPWM(motor_id, 0, angleToPulse(intermediate_angle));
-            delay(23);
+        // Verifica se o angulo é muito pequeno ou for o ultimo step
+        if (abs(final_angle - this->angle) < 10 || steps_remaning <= 1) {
+            // Atualiza a var da posição atual e moev até ao final
+            current_angle = final_angle;
+            (*pwm).setPWM(motor_id, 0, angleToPulse(final_angle));
+            dly(23 + 345);
+        } else {
+            // Trocar a var da posição atual para o próximo passo
+            current_angle += (final_angle - current_angle) / steps_remaning;
+            steps_remaning--;
+
+            (*pwm).setPWM(motor_id, 0, angleToPulse(current_angle));
+            dly(23);
         }
     }
 
-    // Atualizar angulo
-    this->angle = angle;
-    delay(345);
+    return 0;
 }
-
 
 // Transforma angulo em pwm
 uint16_t Motor::angleToPulse(int angle) {

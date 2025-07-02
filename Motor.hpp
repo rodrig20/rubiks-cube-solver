@@ -11,14 +11,19 @@ class Motor {
     int angle = -1;
     Adafruit_PWMServoDriver* pwm;
     int motor_id;
+    int final_angle;
+    int steps_remaning;
+    int current_angle;
+    unsigned long next_move_time = 0;
+    void dly(int milllis_time);
     uint16_t angleToPulse(int angle);
 
    protected:
     void turn_to(int angle);
     void turn_fast_to(int angle);
 
-
    public:
+    int step();
     Motor(Adafruit_PWMServoDriver* pwm, int motor_id);
     virtual void to_default() = 0;
     virtual ~Motor() = default;
