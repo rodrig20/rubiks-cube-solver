@@ -146,6 +146,12 @@ void setupRoutes() {
         String cube_s = getCubeStateString(f1);
         server.send(200, "application/json", cube_s);
     });
+
+    // Aplica um reset ao Cubo
+    server.on("/reset", HTTP_POST, []() {
+        robot->reset();
+        server.send(200, "text/plain", "OK");
+    });
 }
 
 // Transforma um array em uma string para ser lido pelo js
