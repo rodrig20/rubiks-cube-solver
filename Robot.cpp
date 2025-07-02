@@ -329,6 +329,13 @@ void Robot::update_state(const string new_state) {
     this->cube_state = "UFRBLD";
 }
 
+void Robot::reset() {
+    this->move_list = "";
+    init_config();
+    this->cube = new Solver(Solver::solved_string());
+    this->cube_state = "UFRBLD";
+}
+
 // Função chamada em loop para minimizar bloqueios na UI
 void Robot::run() {
     //  Remover espaços iniciais

@@ -35,7 +35,7 @@ class Robot {
     Robot();
     Solver *cube = nullptr;
     ~Robot();
-    void down();
+    void reset();
     string solve();
     string scramble(int size);
     std::array<std::array<int, 3>, 26> piece_state();
