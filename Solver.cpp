@@ -1554,7 +1554,7 @@ string Solver::ZBLL() {
     }
 
     // Obter o Json caso seja uma ZBLL
-    if (ZBLL_type != "PLL") {
+    if (ZBLL_type != "PLL" && ZBLL_type != "H") {
         StaticJsonDocument<1024 * 5> ZBLL_ALGS;
         get_algs(ZBLL_Path[ZBLL_type], ZBLL_ALGS);
         string last_layer_state_str = array_to_string(last_layer_state, 16);
@@ -1565,18 +1565,59 @@ string Solver::ZBLL() {
         }
 
         move_sequence += ZBLL_ALGS[last_layer_state_str].as<string>();
-    // Obter o Json caso seja uma PLL
-    } else {
+    } else if (ZBLL_type == "H") {
+        int found = 0;
+        StaticJsonDocument<1024 * 5> ZBLL_ALGS;
+        get_algs(ZBLL_Path[ZBLL_type], ZBLL_ALGS);
+        string last_layer_state_str;
+
+        for (int i = 0; i < 2; i++) {
+            last_layer_state_str = array_to_string(last_layer_state, 16);
+
+            // Verificar se o estado existe no JSON
+            if (ZBLL_ALGS.containsKey(last_layer_state_str)) {
+                found = 1;
+                break;
+            }
+            if (i != 1) {
+                roll_ZBLL(last_layer_state);
+                roll_ZBLL(last_layer_state);
+                to_ZBLL_pattern(last_layer_state);
+                move_sequence += "D2 ";
+            }
+        }
+        if (!found) {
+            return "-";
+        }
+        move_sequence += ZBLL_ALGS[last_layer_state_str].as<string>();
+        // Obter o Json caso seja uma PLL
+    } else if (ZBLL_type == "PLL") {
+        int found = 0;
         StaticJsonDocument<1024> PLL_ALGS;
         get_algs(PLL_Path, PLL_ALGS);
-        string last_layer_state_str = array_to_string(last_layer_state, 12);
+        string last_layer_state_str;
 
-        // Verificar se o estado existe no JSON
-        if (!PLL_ALGS.containsKey(last_layer_state_str)) {
+        for (int i = 0; i < 4; i++) {
+            last_layer_state_str = array_to_string(last_layer_state, 12);
+            // Verificar se o estado existe no JSON
+            if (PLL_ALGS.containsKey(last_layer_state_str)) {
+                found = 1;
+                break;
+            }
+            if (i != 3) {
+                roll_ZBLL(last_layer_state);
+                to_ZBLL_pattern(last_layer_state);
+                move_sequence += "D' ";
+            }
+        }
+
+        if (!found) {
             return "-";
         }
 
         move_sequence += PLL_ALGS[last_layer_state_str].as<string>();
+    } else {
+        return "-";
     }
 
     move(move_sequence);
