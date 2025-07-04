@@ -544,15 +544,31 @@ string Solver::finish_last_layer() {
     return move_sequence;
 }
 
+// Normalizar (1 como Edge frontal)
+void Solver::to_ZBLL_pattern(int last_layer_state[16]) {
+    int fst_val = last_layer_state[1];
+    for (int j = 0; j < 16; j++) {
+        if (last_layer_state[j] != 5)
+            last_layer_state[j] = ((last_layer_state[j] + 4 - fst_val) % 4) + 1;
+    }
+}
+
+void Solver::roll_ZBLL(int last_layer_state[16]) {
+    // Rodar faces laterais
+    roll_array(last_layer_state, 12, 3);
+    // Rodar topo
+    // TL,TR,BL,BR
+    int temp[] = {last_layer_state[13], last_layer_state[15],
+                  last_layer_state[12], last_layer_state[14]};
+    for (int j = 0; j < 4; j++) {
+        last_layer_state[12 + j] = temp[j];
+    }
+}
+
 tuple<int, string> Solver::ZBLL_find(int last_layer_state[16]) {
     for (int i = 0; i < 4; i++) {
         // Normalizar (1 como Edge frontal)
-        int fst_val = last_layer_state[1];
-        for (int j = 0; j < 16; j++) {
-            if (last_layer_state[j] != 5)
-                last_layer_state[j] =
-                    ((last_layer_state[j] + 4 - fst_val) % 4) + 1;
-        }
+        to_ZBLL_pattern(last_layer_state);
 
         // Verifica tipo de ZBLL
         if (last_layer_state[0] == 5 && last_layer_state[3] == 5 &&
@@ -581,15 +597,7 @@ tuple<int, string> Solver::ZBLL_find(int last_layer_state[16]) {
             return make_tuple(i, "PLL");
         }
 
-        // Rodar faces laterais
-        roll_array(last_layer_state, 12, 3);
-        // Rodar topo
-        // TL,TR,BL,BR
-        int temp[] = {last_layer_state[13], last_layer_state[15],
-                      last_layer_state[12], last_layer_state[14]};
-        for (int j = 0; j < 4; j++) {
-            last_layer_state[12 + j] = temp[j];
-        }
+        roll_ZBLL(last_layer_state);
     }
 
     return make_tuple(-1, "-");

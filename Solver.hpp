@@ -103,6 +103,8 @@ class Solver {
     // Girar a ultima camada para a acertar
     string finish_last_layer();
 
+    void to_ZBLL_pattern(int last_layer_state[16]);
+    void roll_ZBLL(int last_layer_state[16]);
     // Obter o tipo de ZBLL
     tuple<int, string> ZBLL_find(int last_layer_state[16]);
 
