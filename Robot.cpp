@@ -159,10 +159,16 @@ void Robot::virtual_turn_180(int clockwise) {
     }
 }
 
+// Passar a captura de imagem para o buffer
+void Robot::virtual_camera(int face) {
+    this->move_list += "C" + std::to_string(face) + " ";
+}
+
 // Construtor
 Robot::Robot() {
     pinMode(ERROR_LED_PIN, OUTPUT);
     this->cube = new Solver(Solver::solved_string());
+    has_state = 1;
     this->server = new CubeServer(this, 80);
 
 // Executa se o ESP32 está conectado ao robô
@@ -239,104 +245,51 @@ void Robot::turn_face(int clockwise) {
 // Obtem todas as faces do cubo com a camara
 void Robot::get_faces() {
 #if !NO_ROBOT
+    has_state = 0;
     this->move_list = "";
     init_config();
     this->cube_state = "UFRBLD";
 
-    Color colors[54];
-
     // Face do topo
-    grabber->to_lock();
-    Color* face1 = cam->get_color_face();
-    for (int i = 0; i < 9; i++) {
-        colors[i].R = face1[i].R;
-        colors[i].G = face1[i].G;
-        colors[i].B = face1[i].B;
-    }
-    grabber->spin(1);
+    virtual_lock();
+    virtual_camera(1);
+
+    virtual_spin(1);
 
     // Face de trás
-    grabber->to_lock();
-    Color* face2 = cam->get_color_face();
-    for (int i = 8; i >= 0; i--) {
-        colors[3 * 9 + i].R = face2[(9 - 1) - i].R;
-        colors[3 * 9 + i].G = face2[(9 - 1) - i].G;
-        colors[3 * 9 + i].B = face2[(9 - 1) - i].B;
-    }
-    grabber->spin(1);
+    virtual_lock();
+    virtual_camera(2);
+
+    virtual_spin(1);
 
     // Face de baixo
-    grabber->to_lock();
-    Color* face3 = cam->get_color_face();
-    for (int i = 0; i < 9; i++) {
-        colors[5 * 9 + i].R = face3[i].R;
-        colors[5 * 9 + i].G = face3[i].G;
-        colors[5 * 9 + i].B = face3[i].B;
-    }
-    grabber->spin(1);
+    virtual_lock();
+    virtual_camera(3);
+
+    virtual_spin(1);
 
     // Face da frente
-    grabber->to_lock();
-    Color* face4 = cam->get_color_face();
-    for (int i = 0; i < 9; i++) {
-        colors[1 * 9 + i].R = face4[i].R;
-        colors[1 * 9 + i].G = face4[i].G;
-        colors[1 * 9 + i].B = face4[i].B;
-    }
-    grabber->to_default();
-    base->turn_90_aligned(1);
-    grabber->spin(1);
+    virtual_lock();
+    virtual_camera(4);
+
+    virtual_lock_default();
+
+    virtual_turn_90_aligned(1);
+    virtual_spin(1);
 
     // Face da direita
-    grabber->to_lock();
-    Color* face5 = cam->get_color_face();
-    int c = 0;
-    for (int i = 2; i >= 0; i--) {
-        for (int j = 0; j < 3; j++) {
-            colors[2 * 9 + (i + (j * 3))].R = face5[c].R;
-            colors[2 * 9 + (i + (j * 3))].G = face5[c].G;
-            colors[2 * 9 + (i + (j * 3))].B = face5[c].B;
-            c += 1;
-        }
-    }
-    grabber->spin(2);
+    virtual_lock();
+    virtual_camera(5);
+
+    virtual_spin(2);
 
     // Face da esquerda
-    grabber->to_lock();
-    Color* face6 = cam->get_color_face();
-    c = 0;
-    for (int i = 2; i >= 0; i--) {
-        for (int j = 0; j < 3; j++) {
-            colors[4 * 9 + (i + (j * 3))].R = face6[c].R;
-            colors[4 * 9 + (i + (j * 3))].G = face6[c].G;
-            colors[4 * 9 + (i + (j * 3))].B = face6[c].B;
-            c += 1;
-        }
-    }
-    // Voltar à posição
-    grabber->to_default();
-    grabber->spin(1);
-    base->turn_90_aligned(0);
-    grabber->spin(1);
+    virtual_lock();
+    virtual_camera(6);
 
-    // Apagar a memória alocada
-    delete[] face1;
-    delete[] face2;
-    delete[] face3;
-    delete[] face4;
-    delete[] face5;
-    delete[] face6;
-    int labels[54];
-
-    // Agrupar cores
-    cam->grouping_colors(colors, labels);
-
-    std::string cube_state = "";
-    for (int i = 0; i < 54; ++i) {
-        cube_state += std::to_string(labels[i]);
-    }
-
-    update_state(cube_state);
+    virtual_spin(1);
+    virtual_turn_90_aligned(0);
+    virtual_spin(1);
 #else
     // Assume o estado resolvido
     update_state(Solver::solved_string());
@@ -384,6 +337,7 @@ void Robot::update_state(const string new_state) {
 #endif
     this->cube = new Solver(new_state);
     this->cube_state = "UFRBLD";
+    has_state = 1;
 }
 
 void Robot::reset() { update_state(Solver::solved_string()); }
@@ -444,6 +398,81 @@ void Robot::run() {
             } else if (move_id == "D") {
                 base->turn_180(1);
                 motor_move = MotorMove::Base;
+            } else if (move_id == "C1") {
+                Color* face = cam->get_color_face();
+                for (int i = 0; i < 9; i++) {
+                    colors[i].R = face[i].R;
+                    colors[i].G = face[i].G;
+                    colors[i].B = face[i].B;
+                }
+                delete face;
+                face = nullptr;
+            } else if (move_id == "C2") {
+                Color* face = cam->get_color_face();
+                for (int i = 8; i >= 0; i--) {
+                    colors[3 * 9 + i].R = face[(9 - 1) - i].R;
+                    colors[3 * 9 + i].G = face[(9 - 1) - i].G;
+                    colors[3 * 9 + i].B = face[(9 - 1) - i].B;
+                }
+                delete face;
+                face = nullptr;
+            } else if (move_id == "C3") {
+                Color* face = cam->get_color_face();
+                for (int i = 0; i < 9; i++) {
+                    colors[5 * 9 + i].R = face[i].R;
+                    colors[5 * 9 + i].G = face[i].G;
+                    colors[5 * 9 + i].B = face[i].B;
+                }
+                delete face;
+                face = nullptr;
+            } else if (move_id == "C4") {
+                Color* face = cam->get_color_face();
+                for (int i = 0; i < 9; i++) {
+                    colors[1 * 9 + i].R = face[i].R;
+                    colors[1 * 9 + i].G = face[i].G;
+                    colors[1 * 9 + i].B = face[i].B;
+                }
+                delete face;
+                face = nullptr;
+            } else if (move_id == "C5") {
+                Color* face = cam->get_color_face();
+                int c = 0;
+                for (int i = 2; i >= 0; i--) {
+                    for (int j = 0; j < 3; j++) {
+                        colors[2 * 9 + (i + (j * 3))].R = face[c].R;
+                        colors[2 * 9 + (i + (j * 3))].G = face[c].G;
+                        colors[2 * 9 + (i + (j * 3))].B = face[c].B;
+                        c += 1;
+                    }
+                }
+                delete face;
+                face = nullptr;
+            } else if (move_id == "C6") {
+                Color* face = cam->get_color_face();
+                int c = 0;
+                for (int i = 2; i >= 0; i--) {
+                    for (int j = 0; j < 3; j++) {
+                        colors[4 * 9 + (i + (j * 3))].R = face[c].R;
+                        colors[4 * 9 + (i + (j * 3))].G = face[c].G;
+                        colors[4 * 9 + (i + (j * 3))].B = face[c].B;
+                        c += 1;
+                    }
+                }
+                delete face;
+                face = nullptr;
+
+                int labels[54];
+
+                // Agrupar cores
+                cam->grouping_colors(colors, labels);
+
+                std::string cube_state = "";
+                for (int i = 0; i < 54; ++i) {
+                    cube_state += std::to_string(labels[i]);
+                }
+
+                this->cube = new Solver(cube_state);
+                has_state = 1;
             }
         } else {
             motor_move = MotorMove::Null;

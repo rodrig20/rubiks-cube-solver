@@ -68,17 +68,24 @@ function sleep(ms) {
 }
 
 async function getCube() {
-	try {
-		let response = await fetch('/cubestate');
-		if (!response.ok) {
-			throw new Error(`Erro HTTP: ${response.status}`);
+	while (true) {
+		try {
+			let response = await fetch('/cubestate');
+			if (!response.ok) {
+				throw new Error(`Erro HTTP: ${response.status}`);
+			}
+			let data = await response.text(); // Lê a resposta como string
+			if (data.trim() !== "") {
+				rubik = new Rubik(data);
+				break;
+			}
+		} catch (error) {
+			// Resolvido
+			rubik = new Rubik("[[0, 1, 2],[0, -1, 2],[0, 3, 2],[-1, 1, 2],[2, 2, 2],[-1, 3, 2],[5, 1, 2],[5, -1, 2],[5, 3, 2],[0, 1, -1],[0, 0, 0],[0, 3, -1],[1, 1, 1],[3, 3, 3],[5, 1, -1],[5, 5, 5],[5, 3, -1],[0, 1, 4],[0, -1, 4],[0, 3, 4],[-1, 1, 4],[4, 4, 4],[-1, 3, 4],[5, 1, 4],[5, -1, 4],[5, 3, 4]]");
+			console.error("Erro:", error);
+			break
 		}
-		let data = await response.text(); // Lê a resposta como string
-		rubik = new Rubik(data);
-	} catch (error) {
-		// Resolvido
-		rubik = new Rubik("[[0, 1, 2],[0, -1, 2],[0, 3, 2],[-1, 1, 2],[2, 2, 2],[-1, 3, 2],[5, 1, 2],[5, -1, 2],[5, 3, 2],[0, 1, -1],[0, 0, 0],[0, 3, -1],[1, 1, 1],[3, 3, 3],[5, 1, -1],[5, 5, 5],[5, 3, -1],[0, 1, 4],[0, -1, 4],[0, 3, 4],[-1, 1, 4],[4, 4, 4],[-1, 3, 4],[5, 1, 4],[5, -1, 4],[5, 3, 4]]");
-		console.error("Erro:", error);
+		await sleep(100);
 	}
 }
 
@@ -115,10 +122,9 @@ async function solve() {
 				throw new Error(`Erro HTTP: ${response.status}`);
 			}
 			let data = await response.text();
-			console.log("DATA: "+ data)
 
 			// Verificar se data é válido e não é "-"
-			if (data && data.trim() !== "-") {
+			if (data.trim() !== "-") {
 				make_moves(data).then(() => {
 					enbable_manual_move = true;
 				});
@@ -168,7 +174,8 @@ async function scan() {
 				throw new Error(`Erro HTTP: ${response.status}`);
 			}
 			let data = await response.text(); // Lê a resposta como string
-			rubik = new Rubik(data);
+
+			await getCube();
 			enbable_manual_move = true;
 		} catch (error) {
 			// Resolvido
