@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <Wire.h>
+#include <esp_system.h>
 
 #include <iostream>
 #include <sstream>
@@ -12,10 +13,36 @@
 #include "GrabberMotor.hpp"
 #include "Solver.hpp"
 
+#define ERROR_LED_PIN 33
+#define NO_ROBOT 0  // Indica se o esp32 está ligado ao robô
+
+// Verifica se um dispositivo I2C está conectado
+int device_is_present(uint8_t address) {
+    Wire.beginTransmission(address);
+    return (Wire.endTransmission() == 0);
+}
+
+// Pisca o led de Erro
+void blink_erro(int times) {
+    for (int i = 0; i < times; i++) {
+        digitalWrite(ERROR_LED_PIN, LOW);
+        delay(75);
+        digitalWrite(ERROR_LED_PIN, HIGH);
+        if (times - 1 != i) {
+            delay(100);
+        }
+    }
+}
+
 // Inicia a comunicação I2C
 Adafruit_PWMServoDriver* Robot::initI2C() {
+    Wire.begin(14, 15);  // Inicializa I2C nos pinos 14 e 15
+
+    if (!device_is_present(0x40)) {
+        return nullptr;  // Ou lidar com erro como quiseres
+    }
+
     Adafruit_PWMServoDriver* new_pwm = new Adafruit_PWMServoDriver(0x40);
-    Wire.begin(14, 15);
     new_pwm->begin();
     new_pwm->setPWMFreq(50);
     return new_pwm;
@@ -133,18 +160,36 @@ void Robot::virtual_turn_180(int clockwise) {
 
 // Construtor
 Robot::Robot() {
+    pinMode(ERROR_LED_PIN, OUTPUT);
     this->cube = new Solver(Solver::solved_string());
+
+// Executa se o ESP32 está conectado ao robô
+#if !NO_ROBOT
     this->pwm = initI2C();
 
     // Inicializar motores/câmara
     if (!pwm) {
+        std::cout << "I2C não detetado. A reiniciar..." << std::endl;
+        // Avisa do reinicio e volta a ligar
+        blink_erro(2);
+        esp_restart();
         return;
     }
-    this->cam = new Camera();
     this->base = new BaseMotor(this->pwm, 0);
     this->grabber = new GrabberMotor(this->pwm, 1);
 
+    this->cam = new Camera();
+    if (!this->cam->initialized) {
+        std::cout << "Câmara não detetada. A reiniciar..." << std::endl;
+        // Avisa do reinicio e volta a ligar
+        blink_erro(3);
+        esp_restart();
+        return;
+    }
+
     init_config();
+
+#endif
 
     // Pisca o LED para indicar que está pronto
     for (int i = 0; i < 3; i++) {
@@ -191,6 +236,8 @@ void Robot::turn_face(int clockwise) {
 
 // Obtem todas as faces do cubo com a camara
 void Robot::get_faces() {
+// Executa se o ESP32 está conectado ao robô
+#if !NO_ROBOT
     Color colors[54];
 
     // Face do topo
@@ -285,6 +332,10 @@ void Robot::get_faces() {
     }
 
     update_state(cube_state);
+#else
+    // Assume o estado resolvido
+    update_state(Solver::solved_string());
+#endif
 }
 
 // Ativa a sequencia de motores para girar a face de baixo em 180º
@@ -321,23 +372,21 @@ void Robot::update(const string move_string) {
     virtual_move(move_string);
 }
 
-
 void Robot::update_state(const string new_state) {
     this->move_list = "";
+#if !NO_ROBOT
     init_config();
+#endif
     this->cube = new Solver(new_state);
     this->cube_state = "UFRBLD";
 }
 
-void Robot::reset() {
-    this->move_list = "";
-    init_config();
-    this->cube = new Solver(Solver::solved_string());
-    this->cube_state = "UFRBLD";
-}
+void Robot::reset() { update_state(Solver::solved_string()); }
 
 // Função chamada em loop para minimizar bloqueios na UI
 void Robot::run() {
+// Executa se o ESP32 está conectado ao robô
+#if !NO_ROBOT
     //  Remover espaços iniciais
     size_t start = move_list.find_first_not_of(' ');
     if (start != std::string::npos)
@@ -379,13 +428,21 @@ void Robot::run() {
         base->turn_180(0);
     else if (move_id == "D")
         base->turn_180(1);
+
+#else
+    // Apenas apaga o move_list
+    move_list.clear();
+#endif
 }
 
 // Desconstrutor
 Robot::~Robot() {
-    delete pwm;
     delete cube;
+// Delete se o robô existir
+#if !NO_ROBOT
+    delete pwm;
     delete base;
     delete grabber;
     delete cam;
+#endif
 }

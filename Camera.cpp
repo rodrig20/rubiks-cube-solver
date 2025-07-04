@@ -248,6 +248,7 @@ void Camera::startCamera() {
     esp_err_t err = esp_camera_init(&config);
     if (err != ESP_OK) {
         printf("Erro ao iniciar a câmara: 0x%x", err);
+        initialized = 0;
         return;
     }
 
@@ -267,6 +268,8 @@ void Camera::startCamera() {
 
     // Pin do LED
     pinMode(LED_PIN, OUTPUT);
+
+    initialized = 1;
 }
 
 // Agrupa as cores em 6 grupos
