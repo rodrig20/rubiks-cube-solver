@@ -8,6 +8,7 @@
 #include "Camera.hpp"
 #include "GrabberMotor.hpp"
 #include "Solver.hpp"
+#include "CubeServer.hpp"
 
 using namespace std;
 
@@ -18,6 +19,9 @@ enum class MotorMove {
     Null
 };
 
+// Forward declaration
+class CubeServer;
+
 class Robot {
    private:
     Adafruit_PWMServoDriver *pwm = nullptr;
@@ -25,6 +29,7 @@ class Robot {
     BaseMotor *base = nullptr;
     GrabberMotor *grabber = nullptr;
     Camera *cam = nullptr;
+    CubeServer *server = nullptr;
     Adafruit_PWMServoDriver *initI2C();
     std::string move_list = "";
     MotorMove motor_move = MotorMove::Null;
