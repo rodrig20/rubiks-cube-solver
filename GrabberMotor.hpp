@@ -10,6 +10,7 @@ class GrabberMotor: public Motor {
         void to_default() override;
         void spin(int times);
         void spin();
+        void up();
 };
 
 #endif

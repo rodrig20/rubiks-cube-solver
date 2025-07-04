@@ -10,9 +10,9 @@
 
 #include "BaseMotor.hpp"
 #include "Camera.hpp"
+#include "CubeServer.hpp"
 #include "GrabberMotor.hpp"
 #include "Solver.hpp"
-#include "CubeServer.hpp"
 
 #define ERROR_LED_PIN 33
 #define NO_ROBOT 0  // Indica se o esp32 está ligado ao robô
@@ -51,8 +51,8 @@ Adafruit_PWMServoDriver* Robot::initI2C() {
 
 // Move os dois motores para a posição padrão
 void Robot::init_config() {
-    base->to_default();
-    grabber->to_default();
+    virtual_lock_default();
+    virtual_turn_90_aligned(0);
 }
 
 // Aplica um movimento ao cubo causado pelas rotações da base
@@ -122,7 +122,7 @@ void Robot::rotate_to_side(const char side) {
 // Passar o movimento spin para o buffer
 void Robot::virtual_spin(int times) {
     for (int i = 0; i < times; i++) {
-        this->move_list += "S ";
+        this->move_list += "U P ";
     }
 }
 
@@ -159,10 +159,16 @@ void Robot::virtual_turn_180(int clockwise) {
     }
 }
 
+// Passar a captura de imagem para o buffer
+void Robot::virtual_camera(int face) {
+    this->move_list += "C" + std::to_string(face) + " ";
+}
+
 // Construtor
 Robot::Robot() {
     pinMode(ERROR_LED_PIN, OUTPUT);
     this->cube = new Solver(Solver::solved_string());
+    has_state = 1;
     this->server = new CubeServer(this, 80);
 
 // Executa se o ESP32 está conectado ao robô
@@ -238,102 +244,52 @@ void Robot::turn_face(int clockwise) {
 
 // Obtem todas as faces do cubo com a camara
 void Robot::get_faces() {
-// Executa se o ESP32 está conectado ao robô
 #if !NO_ROBOT
-    Color colors[54];
+    has_state = 0;
+    this->move_list = "";
+    init_config();
+    this->cube_state = "UFRBLD";
 
     // Face do topo
-    grabber->to_lock();
-    Color* face1 = cam->get_color_face();
-    for (int i = 0; i < 9; i++) {
-        colors[i].R = face1[i].R;
-        colors[i].G = face1[i].G;
-        colors[i].B = face1[i].B;
-    }
-    grabber->spin(1);
+    virtual_lock();
+    virtual_camera(1);
+
+    virtual_spin(1);
 
     // Face de trás
-    grabber->to_lock();
-    Color* face2 = cam->get_color_face();
-    for (int i = 8; i >= 0; i--) {
-        colors[3 * 9 + i].R = face2[(9 - 1) - i].R;
-        colors[3 * 9 + i].G = face2[(9 - 1) - i].G;
-        colors[3 * 9 + i].B = face2[(9 - 1) - i].B;
-    }
-    grabber->spin(1);
+    virtual_lock();
+    virtual_camera(2);
+
+    virtual_spin(1);
 
     // Face de baixo
-    grabber->to_lock();
-    Color* face3 = cam->get_color_face();
-    for (int i = 0; i < 9; i++) {
-        colors[5 * 9 + i].R = face3[i].R;
-        colors[5 * 9 + i].G = face3[i].G;
-        colors[5 * 9 + i].B = face3[i].B;
-    }
-    grabber->spin(1);
+    virtual_lock();
+    virtual_camera(3);
+
+    virtual_spin(1);
 
     // Face da frente
-    grabber->to_lock();
-    Color* face4 = cam->get_color_face();
-    for (int i = 0; i < 9; i++) {
-        colors[1 * 9 + i].R = face4[i].R;
-        colors[1 * 9 + i].G = face4[i].G;
-        colors[1 * 9 + i].B = face4[i].B;
-    }
-    grabber->to_default();
-    base->turn_90_aligned(1);
-    grabber->spin(1);
+    virtual_lock();
+    virtual_camera(4);
+
+    virtual_lock_default();
+
+    virtual_turn_90_aligned(1);
+    virtual_spin(1);
 
     // Face da direita
-    grabber->to_lock();
-    Color* face5 = cam->get_color_face();
-    int c = 0;
-    for (int i = 2; i >= 0; i--) {
-        for (int j = 0; j < 3; j++) {
-            colors[2 * 9 + (i + (j * 3))].R = face5[c].R;
-            colors[2 * 9 + (i + (j * 3))].G = face5[c].G;
-            colors[2 * 9 + (i + (j * 3))].B = face5[c].B;
-            c += 1;
-        }
-    }
-    grabber->spin(2);
+    virtual_lock();
+    virtual_camera(5);
+
+    virtual_spin(2);
 
     // Face da esquerda
-    grabber->to_lock();
-    Color* face6 = cam->get_color_face();
-    c = 0;
-    for (int i = 2; i >= 0; i--) {
-        for (int j = 0; j < 3; j++) {
-            colors[4 * 9 + (i + (j * 3))].R = face6[c].R;
-            colors[4 * 9 + (i + (j * 3))].G = face6[c].G;
-            colors[4 * 9 + (i + (j * 3))].B = face6[c].B;
-            c += 1;
-        }
-    }
-    // Voltar à posição
-    grabber->to_default();
-    grabber->spin(1);
-    base->turn_90_aligned(0);
-    grabber->spin(1);
+    virtual_lock();
+    virtual_camera(6);
 
-    // Apagar a memória alocada
-    delete[] face1;
-    delete[] face2;
-    delete[] face3;
-    delete[] face4;
-    delete[] face5;
-    delete[] face6;
-    int labels[54];
-
-    // Agrupar cores
-    cam->grouping_colors(colors, labels);
-
-    std::string cube_state = "";
-    for (int i = 0; i < 54; ++i) {
-        cube_state += std::to_string(labels[i]);
-    }
-
-    update_state(cube_state);
+    virtual_spin(1);
+    virtual_turn_90_aligned(0);
+    virtual_spin(1);
 #else
     // Assume o estado resolvido
     update_state(Solver::solved_string());
@@ -381,61 +337,153 @@ void Robot::update_state(const string new_state) {
 #endif
     this->cube = new Solver(new_state);
     this->cube_state = "UFRBLD";
+    has_state = 1;
 }
 
 void Robot::reset() { update_state(Solver::solved_string()); }
-
 
 // Função chamada em loop para minimizar bloqueios na UI
 void Robot::run() {
     server->handleClient();
 // Executa se o ESP32 está conectado ao robô
 #if !NO_ROBOT
-    //  Remover espaços iniciais
-    size_t start = move_list.find_first_not_of(' ');
-    if (start != std::string::npos)
-        move_list = move_list.substr(start);
-    else
-        move_list.clear();  // A string é só espaços
-
-    if (move_list.empty()) return;  // Nada para fazer
-
-    // Encontrar o fim da primeira palavra
-    size_t end = move_list.find(' ');
-
-    // Extrair o primeiro movimento
     std::string move_id;
-    if (end != std::string::npos) {
-        move_id = move_list.substr(0, end);
-        move_list = move_list.substr(end + 1);
-    } else {
-        move_id = move_list;
-        move_list.clear();
+    if (motor_move == MotorMove::Null) {
+        //  Remover espaços iniciais
+        size_t start = move_list.find_first_not_of(' ');
+        if (start != std::string::npos)
+            move_list = move_list.substr(start);
+        else
+            move_list.clear();  // A string é só espaços
+        if (!move_list.empty()) {
+            // Encontrar o fim da primeira palavra
+            size_t end = move_list.find(' ');
+
+            // Extrair o primeiro movimento
+            if (end != std::string::npos) {
+                move_id = move_list.substr(0, end);
+                move_list = move_list.substr(end + 1);
+            } else {
+                move_id = move_list;
+                move_list.clear();
+            }
+            // Traduzir movimento para função
+            if (move_id == "S") {
+                grabber->spin(1);
+                motor_move = MotorMove::Grabber;
+            } else if (move_id == "U") {
+                grabber->up();
+                motor_move = MotorMove::Grabber;
+            } else if (move_id == "L") {
+                grabber->to_lock();
+                motor_move = MotorMove::Grabber;
+            } else if (move_id == "P") {
+                grabber->to_default();
+                motor_move = MotorMove::Grabber;
+            } else if (move_id == "A'") {
+                base->turn_90_aligned(0);
+                motor_move = MotorMove::Base;
+            } else if (move_id == "A") {
+                base->turn_90_aligned(1);
+                motor_move = MotorMove::Base;
+            } else if (move_id == "T'") {
+                base->turn_90(0);
+                motor_move = MotorMove::Base;
+            } else if (move_id == "T") {
+                base->turn_90(1);
+                motor_move = MotorMove::Base;
+            } else if (move_id == "D'") {
+                base->turn_180(0);
+                motor_move = MotorMove::Base;
+            } else if (move_id == "D") {
+                base->turn_180(1);
+                motor_move = MotorMove::Base;
+            } else if (move_id == "C1") {
+                Color* face = cam->get_color_face();
+                for (int i = 0; i < 9; i++) {
+                    colors[i].R = face[i].R;
+                    colors[i].G = face[i].G;
+                    colors[i].B = face[i].B;
+                }
+                delete face;
+                face = nullptr;
+            } else if (move_id == "C2") {
+                Color* face = cam->get_color_face();
+                for (int i = 8; i >= 0; i--) {
+                    colors[3 * 9 + i].R = face[(9 - 1) - i].R;
+                    colors[3 * 9 + i].G = face[(9 - 1) - i].G;
+                    colors[3 * 9 + i].B = face[(9 - 1) - i].B;
+                }
+                delete face;
+                face = nullptr;
+            } else if (move_id == "C3") {
+                Color* face = cam->get_color_face();
+                for (int i = 0; i < 9; i++) {
+                    colors[5 * 9 + i].R = face[i].R;
+                    colors[5 * 9 + i].G = face[i].G;
+                    colors[5 * 9 + i].B = face[i].B;
+                }
+                delete face;
+                face = nullptr;
+            } else if (move_id == "C4") {
+                Color* face = cam->get_color_face();
+                for (int i = 0; i < 9; i++) {
+                    colors[1 * 9 + i].R = face[i].R;
+                    colors[1 * 9 + i].G = face[i].G;
+                    colors[1 * 9 + i].B = face[i].B;
+                }
+                delete face;
+                face = nullptr;
+            } else if (move_id == "C5") {
+                Color* face = cam->get_color_face();
+                int c = 0;
+                for (int i = 2; i >= 0; i--) {
+                    for (int j = 0; j < 3; j++) {
+                        colors[2 * 9 + (i + (j * 3))].R = face[c].R;
+                        colors[2 * 9 + (i + (j * 3))].G = face[c].G;
+                        colors[2 * 9 + (i + (j * 3))].B = face[c].B;
+                        c += 1;
+                    }
+                }
+                delete face;
+                face = nullptr;
+            } else if (move_id == "C6") {
+                Color* face = cam->get_color_face();
+                int c = 0;
+                for (int i = 2; i >= 0; i--) {
+                    for (int j = 0; j < 3; j++) {
+                        colors[4 * 9 + (i + (j * 3))].R = face[c].R;
+                        colors[4 * 9 + (i + (j * 3))].G = face[c].G;
+                        colors[4 * 9 + (i + (j * 3))].B = face[c].B;
+                        c += 1;
+                    }
+                }
+                delete face;
+                face = nullptr;
+
+                int labels[54];
+
+                // Agrupar cores
+                cam->grouping_colors(colors, labels);
+
+                std::string cube_state = "";
+                for (int i = 0; i < 54; ++i) {
+                    cube_state += std::to_string(labels[i]);
+                }
+
+                this->cube = new Solver(cube_state);
+                has_state = 1;
+            }
+        } else {
+            motor_move = MotorMove::Null;
+        }
     }
+    if (motor_move == MotorMove::Grabber) {
+        if (grabber->step()) motor_move = MotorMove::Null;
 
-    // Traduzir movimento para função
-    if (move_id == "S")
-        grabber->spin(1);
-    else if (move_id == "L")
-        grabber->to_lock();
-    else if (move_id == "P")
-        grabber->to_default();
-    else if (move_id == "A'")
-        base->turn_90_aligned(0);
-    else if (move_id == "A")
-        base->turn_90_aligned(1);
-    else if (move_id == "T'")
-        base->turn_90(0);
-    else if (move_id == "T")
-        base->turn_90(1);
-    else if (move_id == "D'")
-        base->turn_180(0);
-    else if (move_id == "D")
-        base->turn_180(1);
-
-#else
-    // Apenas apaga o move_list
-    move_list.clear();
+    } else if (motor_move == MotorMove::Base) {
+        if (base->step()) motor_move = MotorMove::Null;
+    }
 #endif
 }
 

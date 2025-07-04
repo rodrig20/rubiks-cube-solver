@@ -6,11 +6,18 @@
 
 #include "BaseMotor.hpp"
 #include "Camera.hpp"
+#include "CubeServer.hpp"
 #include "GrabberMotor.hpp"
 #include "Solver.hpp"
-#include "CubeServer.hpp"
 
 using namespace std;
+
+
+enum class MotorMove {
+    Grabber,
+    Base,
+    Null
+};
 
 // Forward declaration
 class CubeServer;
@@ -25,6 +32,8 @@ class Robot {
     CubeServer *server = nullptr;
     Adafruit_PWMServoDriver *initI2C();
     std::string move_list = "";
+    Color colors[54];
+    MotorMove motor_move = MotorMove::Null;
     // void set_motors();
     void init_config();
     void rotate_to_side(const char side);
@@ -35,10 +44,12 @@ class Robot {
     void virtual_turn_90(int clockwise);
     void virtual_turn_90_aligned(int clockwise);
     void virtual_turn_180(int clockwise);
+    void virtual_camera(int face);
 
-    public:
-    Robot();
+   public:
+    int has_state = 0;
     Solver *cube = nullptr;
+    Robot();
     ~Robot();
     void reset();
     string solve();

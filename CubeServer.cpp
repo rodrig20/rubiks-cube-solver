@@ -3,6 +3,7 @@
 #include <LittleFS.h>
 #include <WebServer.h>
 #include <WiFi.h>
+
 #include <iostream>
 
 #include "Robot.hpp"
@@ -96,9 +97,13 @@ void CubeServer::setupRoutes() {
 
     // Envia o estado do cubo (peças)
     server.on("/cubestate", HTTP_GET, [this]() {
-        auto f1 = robot->cube->piece_state();
-        String cube_s = getCubeStateString(f1);
-        server.send(200, "application/json", cube_s);
+        if (robot->has_state) {
+            auto f1 = robot->cube->piece_state();
+            String cube_s = getCubeStateString(f1);
+            server.send(200, "application/json", cube_s);
+        } else {
+            server.send(200, "application/json", String(""));
+        }
     });
 
     // Recebe uma sequencia de movimentos e executa-a
@@ -138,9 +143,7 @@ void CubeServer::setupRoutes() {
     // Le o cubo com a camera e envia o novo estado
     server.on("/scan", HTTP_GET, [this]() {
         robot->get_faces();
-        auto f1 = robot->cube->piece_state();
-        String cube_s = getCubeStateString(f1);
-        server.send(200, "application/json", cube_s);
+        server.send(200, "text/plain", "OK");
     });
 
     // Aplica um reset ao Cubo

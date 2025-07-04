@@ -24,3 +24,8 @@ void GrabberMotor::spin() {
     turn_to(204);
     to_default();
 }
+
+// Mover para cima
+void GrabberMotor::up() {
+    turn_to(204);
+}
