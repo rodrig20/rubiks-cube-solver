@@ -544,15 +544,31 @@ string Solver::finish_last_layer() {
     return move_sequence;
 }
 
+// Normalizar (1 como Edge frontal)
+void Solver::to_ZBLL_pattern(int last_layer_state[16]) {
+    int fst_val = last_layer_state[1];
+    for (int j = 0; j < 16; j++) {
+        if (last_layer_state[j] != 5)
+            last_layer_state[j] = ((last_layer_state[j] + 4 - fst_val) % 4) + 1;
+    }
+}
+
+void Solver::roll_ZBLL(int last_layer_state[16]) {
+    // Rodar faces laterais
+    roll_array(last_layer_state, 12, 3);
+    // Rodar topo
+    // TL,TR,BL,BR
+    int temp[] = {last_layer_state[13], last_layer_state[15],
+                  last_layer_state[12], last_layer_state[14]};
+    for (int j = 0; j < 4; j++) {
+        last_layer_state[12 + j] = temp[j];
+    }
+}
+
 tuple<int, string> Solver::ZBLL_find(int last_layer_state[16]) {
     for (int i = 0; i < 4; i++) {
         // Normalizar (1 como Edge frontal)
-        int fst_val = last_layer_state[1];
-        for (int j = 0; j < 16; j++) {
-            if (last_layer_state[j] != 5)
-                last_layer_state[j] =
-                    ((last_layer_state[j] + 4 - fst_val) % 4) + 1;
-        }
+        to_ZBLL_pattern(last_layer_state);
 
         // Verifica tipo de ZBLL
         if (last_layer_state[0] == 5 && last_layer_state[3] == 5 &&
@@ -581,15 +597,7 @@ tuple<int, string> Solver::ZBLL_find(int last_layer_state[16]) {
             return make_tuple(i, "PLL");
         }
 
-        // Rodar faces laterais
-        roll_array(last_layer_state, 12, 3);
-        // Rodar topo
-        // TL,TR,BL,BR
-        int temp[] = {last_layer_state[13], last_layer_state[15],
-                      last_layer_state[12], last_layer_state[14]};
-        for (int j = 0; j < 4; j++) {
-            last_layer_state[12 + j] = temp[j];
-        }
+        roll_ZBLL(last_layer_state);
     }
 
     return make_tuple(-1, "-");
@@ -1546,7 +1554,7 @@ string Solver::ZBLL() {
     }
 
     // Obter o Json caso seja uma ZBLL
-    if (ZBLL_type != "PLL") {
+    if (ZBLL_type != "PLL" && ZBLL_type != "H") {
         StaticJsonDocument<1024 * 5> ZBLL_ALGS;
         get_algs(ZBLL_Path[ZBLL_type], ZBLL_ALGS);
         string last_layer_state_str = array_to_string(last_layer_state, 16);
@@ -1557,18 +1565,59 @@ string Solver::ZBLL() {
         }
 
         move_sequence += ZBLL_ALGS[last_layer_state_str].as<string>();
-    // Obter o Json caso seja uma PLL
-    } else {
+    } else if (ZBLL_type == "H") {
+        int found = 0;
+        StaticJsonDocument<1024 * 5> ZBLL_ALGS;
+        get_algs(ZBLL_Path[ZBLL_type], ZBLL_ALGS);
+        string last_layer_state_str;
+
+        for (int i = 0; i < 2; i++) {
+            last_layer_state_str = array_to_string(last_layer_state, 16);
+
+            // Verificar se o estado existe no JSON
+            if (ZBLL_ALGS.containsKey(last_layer_state_str)) {
+                found = 1;
+                break;
+            }
+            if (i != 1) {
+                roll_ZBLL(last_layer_state);
+                roll_ZBLL(last_layer_state);
+                to_ZBLL_pattern(last_layer_state);
+                move_sequence += "D2 ";
+            }
+        }
+        if (!found) {
+            return "-";
+        }
+        move_sequence += ZBLL_ALGS[last_layer_state_str].as<string>();
+        // Obter o Json caso seja uma PLL
+    } else if (ZBLL_type == "PLL") {
+        int found = 0;
         StaticJsonDocument<1024> PLL_ALGS;
         get_algs(PLL_Path, PLL_ALGS);
-        string last_layer_state_str = array_to_string(last_layer_state, 12);
+        string last_layer_state_str;
 
-        // Verificar se o estado existe no JSON
-        if (!PLL_ALGS.containsKey(last_layer_state_str)) {
+        for (int i = 0; i < 4; i++) {
+            last_layer_state_str = array_to_string(last_layer_state, 12);
+            // Verificar se o estado existe no JSON
+            if (PLL_ALGS.containsKey(last_layer_state_str)) {
+                found = 1;
+                break;
+            }
+            if (i != 3) {
+                roll_ZBLL(last_layer_state);
+                to_ZBLL_pattern(last_layer_state);
+                move_sequence += "D' ";
+            }
+        }
+
+        if (!found) {
             return "-";
         }
 
         move_sequence += PLL_ALGS[last_layer_state_str].as<string>();
+    } else {
+        return "-";
     }
 
     move(move_sequence);
@@ -1585,7 +1634,6 @@ string Solver::solve() {
         return "-";
     }
     move_sequence += move_sequence_EO + " ";
-    cout << move_sequence_EO << endl;
 
     // Resolve cross
     string move_sequence_cross = cross();
@@ -1593,7 +1641,6 @@ string Solver::solve() {
         return "-";
     }
     move_sequence += move_sequence_cross + " ";
-    cout << move_sequence_cross << endl;
 
     // Resolve F2L
     string move_sequence_F2L = F2L();
@@ -1601,7 +1648,6 @@ string Solver::solve() {
         return "-";
     }
     move_sequence += move_sequence_F2L + " ";
-    cout << move_sequence_F2L << endl;
 
     // Resolve ZBLL
     string move_sequence_ZBLL = ZBLL();
@@ -1610,11 +1656,7 @@ string Solver::solve() {
     }
     move_sequence += move_sequence_ZBLL;
 
-    cout << move_sequence_ZBLL << endl;
-
-
-    //return simplify_move(move_sequence);
-    return move_sequence;
+    return simplify_move(move_sequence);
 }
 
 // Verificar se o cubo está resolvido
