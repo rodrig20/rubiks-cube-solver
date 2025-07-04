@@ -13,12 +13,25 @@
 #include "GrabberMotor.hpp"
 #include "Solver.hpp"
 
+#define ERROR_LED_PIN 33
 #define NO_ROBOT 0  // Indica se o esp32 está ligado ao robô
 
 // Verifica se um dispositivo I2C está conectado
 int device_is_present(uint8_t address) {
     Wire.beginTransmission(address);
     return (Wire.endTransmission() == 0);
+}
+
+// Pisca o led de Erro
+void blink_erro(int times) {
+    for (int i = 0; i < times; i++) {
+        digitalWrite(ERROR_LED_PIN, LOW);
+        delay(75);
+        digitalWrite(ERROR_LED_PIN, HIGH);
+        if (times - 1 != i) {
+            delay(100);
+        }
+    }
 }
 
 // Inicia a comunicação I2C
@@ -30,7 +43,6 @@ Adafruit_PWMServoDriver* Robot::initI2C() {
     }
 
     Adafruit_PWMServoDriver* new_pwm = new Adafruit_PWMServoDriver(0x40);
-    Wire.begin(14, 15);
     new_pwm->begin();
     new_pwm->setPWMFreq(50);
     return new_pwm;
@@ -148,6 +160,7 @@ void Robot::virtual_turn_180(int clockwise) {
 
 // Construtor
 Robot::Robot() {
+    pinMode(ERROR_LED_PIN, OUTPUT);
     this->cube = new Solver(Solver::solved_string());
 
 // Executa se o ESP32 está conectado ao robô
@@ -157,16 +170,19 @@ Robot::Robot() {
     // Inicializar motores/câmara
     if (!pwm) {
         std::cout << "I2C não detetado. A reiniciar..." << std::endl;
+        // Avisa do reinicio e volta a ligar
+        blink_erro(2);
         esp_restart();
         return;
     }
-    this->cam = new Camera();
     this->base = new BaseMotor(this->pwm, 0);
     this->grabber = new GrabberMotor(this->pwm, 1);
 
     this->cam = new Camera();
     if (!this->cam->initialized) {
         std::cout << "Câmara não detetada. A reiniciar..." << std::endl;
+        // Avisa do reinicio e volta a ligar
+        blink_erro(3);
         esp_restart();
         return;
     }
@@ -356,7 +372,6 @@ void Robot::update(const string move_string) {
     virtual_move(move_string);
 }
 
-
 void Robot::update_state(const string new_state) {
     this->move_list = "";
 #if !NO_ROBOT
@@ -429,4 +444,5 @@ Robot::~Robot() {
     delete base;
     delete grabber;
     delete cam;
+#endif
 }
