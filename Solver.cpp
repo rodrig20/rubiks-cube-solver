@@ -1634,7 +1634,6 @@ string Solver::solve() {
         return "-";
     }
     move_sequence += move_sequence_EO + " ";
-    cout << move_sequence_EO << endl;
 
     // Resolve cross
     string move_sequence_cross = cross();
@@ -1642,7 +1641,6 @@ string Solver::solve() {
         return "-";
     }
     move_sequence += move_sequence_cross + " ";
-    cout << move_sequence_cross << endl;
 
     // Resolve F2L
     string move_sequence_F2L = F2L();
@@ -1650,7 +1648,6 @@ string Solver::solve() {
         return "-";
     }
     move_sequence += move_sequence_F2L + " ";
-    cout << move_sequence_F2L << endl;
 
     // Resolve ZBLL
     string move_sequence_ZBLL = ZBLL();
@@ -1659,11 +1656,7 @@ string Solver::solve() {
     }
     move_sequence += move_sequence_ZBLL;
 
-    cout << move_sequence_ZBLL << endl;
-
-
-    //return simplify_move(move_sequence);
-    return move_sequence;
+    return simplify_move(move_sequence);
 }
 
 // Verificar se o cubo está resolvido
