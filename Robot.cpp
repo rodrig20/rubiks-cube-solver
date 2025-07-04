@@ -12,6 +12,7 @@
 #include "Camera.hpp"
 #include "GrabberMotor.hpp"
 #include "Solver.hpp"
+#include "CubeServer.hpp"
 
 #define ERROR_LED_PIN 33
 #define NO_ROBOT 0  // Indica se o esp32 está ligado ao robô
@@ -162,6 +163,7 @@ void Robot::virtual_turn_180(int clockwise) {
 Robot::Robot() {
     pinMode(ERROR_LED_PIN, OUTPUT);
     this->cube = new Solver(Solver::solved_string());
+    this->server = new CubeServer(this, 80);
 
 // Executa se o ESP32 está conectado ao robô
 #if !NO_ROBOT
@@ -383,8 +385,10 @@ void Robot::update_state(const string new_state) {
 
 void Robot::reset() { update_state(Solver::solved_string()); }
 
+
 // Função chamada em loop para minimizar bloqueios na UI
 void Robot::run() {
+    server->handleClient();
 // Executa se o ESP32 está conectado ao robô
 #if !NO_ROBOT
     //  Remover espaços iniciais
@@ -438,6 +442,7 @@ void Robot::run() {
 // Desconstrutor
 Robot::~Robot() {
     delete cube;
+    delete server;
 // Delete se o robô existir
 #if !NO_ROBOT
     delete pwm;

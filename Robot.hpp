@@ -8,8 +8,12 @@
 #include "Camera.hpp"
 #include "GrabberMotor.hpp"
 #include "Solver.hpp"
+#include "CubeServer.hpp"
 
 using namespace std;
+
+// Forward declaration
+class CubeServer;
 
 class Robot {
    private:
@@ -18,6 +22,7 @@ class Robot {
     BaseMotor *base = nullptr;
     GrabberMotor *grabber = nullptr;
     Camera *cam = nullptr;
+    CubeServer *server = nullptr;
     Adafruit_PWMServoDriver *initI2C();
     std::string move_list = "";
     // void set_motors();
