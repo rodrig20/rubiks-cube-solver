@@ -108,7 +108,6 @@ Color Camera::get_color_piece(camera_fb_t* fb, int posx, int posy, int size) {
     int x_end = posx + size - piece_padding;
     int y_end = posy + size - piece_padding;
 
-    int stride_px = (fb->len / fb->height) / 2;
     int area = 0;
 
     // Percorrer area para a média de cor
@@ -145,8 +144,6 @@ void Camera::draw(camera_fb_t* fb, int posx, int posy, int size) {
 
     int x_end = posx + size - piece_padding;
     int y_end = posy + size - piece_padding;
-
-    int stride_px = (fb->len / fb->height) / 2;
 
     // Percorrer area para a média de cor
     for (int y = y_start; y < y_end; y++) {
@@ -328,7 +325,7 @@ void Camera::grouping_colors(Color cores[54], int labels[54]) {
 
         // Verificar qual dos centros tem a peça mais próxima
         for (int j = 0; j < 6; j++) {
-            if (grup_size[j] >= 9) continue; // tamnho máximo é 9
+            if (grup_size[j] >= 9) continue;  // tamnho máximo é 9
             if (lowest_idx == -1) {
                 lowest_idx = j;
             }

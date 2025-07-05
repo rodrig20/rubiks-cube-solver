@@ -1,9 +1,11 @@
 #ifndef CUBE_SERVER_HPP
 #define CUBE_SERVER_HPP
 
+#include <Arduino.h>
 #include <LittleFS.h>
 #include <WebServer.h>
 #include <WiFi.h>
+
 #include "Robot.hpp"
 
 // Forward declaration
@@ -23,9 +25,9 @@ class CubeServer {
         const std::array<std::array<int, 3>, 26>& cubeState);
 
    public:
-   CubeServer(Robot* robot_ref, int port);
-   void handleClient();
-   ~CubeServer();
+    CubeServer(Robot* robot_ref, int port);
+    void handleClient();
+    ~CubeServer();
 };
 
 #endif

@@ -1,6 +1,6 @@
 #include "Motor.hpp"
 
-#include <iostream>
+#include <Arduino.h>
 
 // Construtor que armazen o motor_id e pwm
 Motor::Motor(Adafruit_PWMServoDriver *pwm, int motor_id) {

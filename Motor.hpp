@@ -1,6 +1,7 @@
 #ifndef MOTOR_HPP
 #define MOTOR_HPP
 
+#include <Arduino.h>
 #include <Adafruit_PWMServoDriver.h>
 
 const uint16_t SERVO_MIN = 70;   // Pulso mínimo (~0º)

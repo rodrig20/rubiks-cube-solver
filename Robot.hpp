@@ -12,12 +12,7 @@
 
 using namespace std;
 
-
-enum class MotorMove {
-    Grabber,
-    Base,
-    Null
-};
+enum class MotorMove { Grabber, Base, Null };
 
 // Forward declaration
 class CubeServer;
