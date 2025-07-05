@@ -2,3 +2,4 @@
 venv
 .vscode
 tools/twophase
+tools/serial.log
