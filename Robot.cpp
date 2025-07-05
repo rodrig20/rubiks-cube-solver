@@ -350,14 +350,14 @@ void Robot::run() {
     std::string move_id;
     if (motor_move == MotorMove::Null) {
         //  Remover espaços iniciais
-        size_t start = move_list.find_first_not_of(' ');
+        std::size_t start = move_list.find_first_not_of(' ');
         if (start != std::string::npos)
             move_list = move_list.substr(start);
         else
             move_list.clear();  // A string é só espaços
         if (!move_list.empty()) {
             // Encontrar o fim da primeira palavra
-            size_t end = move_list.find(' ');
+            std::size_t end = move_list.find(' ');
 
             // Extrair o primeiro movimento
             if (end != std::string::npos) {

@@ -6,12 +6,10 @@
 #include <array>
 #include <cmath>
 #include <cstdlib>
-#include <fstream>
 #include <iostream>
 #include <map>
 #include <sstream>
 #include <tuple>
-#include <unordered_set>
 #include <vector>
 
 using namespace std;
@@ -439,7 +437,7 @@ int Solver::get_edge_ori_coord() {
     int result = 0;
     // Transforma o array (que simula um inteiro de base 3) em um inteiro
     // (base10)
-    for (size_t i = 0; i < 11; i++) {
+    for (std::size_t i = 0; i < 11; i++) {
         result += edges[i].orientation() * (pow(2, 10 - i));
     }
     return result;
@@ -525,7 +523,7 @@ void Solver::get_algs(const char* json_path, JsonDocument& doc) {
     // Verifica se ocorreu algum erro durante o parsing
     if (error) {
         cout << "Falha ao aplicar parse do JSON: " << error.f_str() << endl;
-        doc.clear(); // Garantir que o documento fica vazio em caso de erro
+        doc.clear();  // Garantir que o documento fica vazio em caso de erro
         return;
     }
 }
@@ -802,7 +800,7 @@ string Solver::revert_move(const string move_string) {
     reverse(moves.begin(), moves.end());
 
     // Traduzir movimento para função invertida (X -> X' e X' -> X)
-    for (size_t i = 0; i < moves.size(); i++) {
+    for (std::size_t i = 0; i < moves.size(); i++) {
         string move = moves[i];
         if (move == "U2") {
             rot_U(2);
@@ -862,7 +860,7 @@ string Solver::revert_move(const string move_string) {
     }
 
     ostringstream oss;
-    for (size_t i = 0; i < final_moves.size(); i++) {
+    for (std::size_t i = 0; i < final_moves.size(); i++) {
         if (i > 0) oss << " ";
         oss << final_moves[i];
     }
@@ -1312,15 +1310,16 @@ string Solver::F2L() {
                     // fique em na mesma coluna do seu lugar
                     for (int i = 0; i < 4; i++) {
                         if (corners[corner_pos].pair(secundary_color,
-                                                    tertiary_color) == 1) {
+                                                     tertiary_color) == 1) {
                             break;
                         }
                         move("D");
                         move_sequence += " D";
                     }
-                    // Se não encontrou o corner na posição correta após 4 tentativas, retorna erro
+                    // Se não encontrou o corner na posição correta após 4
+                    // tentativas, retorna erro
                     if (corners[corner_pos].pair(secundary_color,
-                                                tertiary_color) == 0) {
+                                                 tertiary_color) == 0) {
                         return "-";
                     }
                     tuple<int, int> vals = {secundary_color, tertiary_color};
@@ -1367,7 +1366,7 @@ string Solver::F2L() {
                                 edge_pos_json =
                                     to_string((corner_pos - edge_pos + 4) % 4);
                             }
-                            f2l_case = (F2L_ALGS["corner_top"][corner_ori]
+                            f2l_case = (F2L_ALGS[string("corner_top")][corner_ori]
                                                 [edge_pos_json]
                                                     .as<string>());
                             break;
@@ -1412,7 +1411,7 @@ string Solver::F2L() {
                     }
 
                     f2l_case =
-                        (F2L_ALGS["corner_bottom"][corner_ori].as<string>());
+                        (F2L_ALGS[string("corner_bottom")][corner_ori].as<string>());
                 }
                 // Aplicar espelhamento
                 f2l_case = mirror_move(f2l_case, !side, !front);
@@ -1686,7 +1685,7 @@ string Solver::simplify_move(const string move_string) {
 
     vector<string> new_moves_seq;
 
-    for (size_t i = 0; i < moves_seq.size(); i++) {
+    for (std::size_t i = 0; i < moves_seq.size(); i++) {
         move = moves_seq[i];
         if (new_moves_seq.size() > 0) {
             string last_move = new_moves_seq.back();
@@ -1735,7 +1734,7 @@ string Solver::simplify_move(const string move_string) {
     }
 
     string new_move_string = "";
-    for (size_t i = 0; i < new_moves_seq.size(); i++) {
+    for (std::size_t i = 0; i < new_moves_seq.size(); i++) {
         new_move_string += new_moves_seq[i] + " ";
     }
     return new_move_string;

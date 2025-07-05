@@ -26,7 +26,7 @@ void CubeServer::handleCapture() {
 
     // transformar em jpeg
     uint8_t* jpeg_buf = nullptr;
-    size_t jpeg_len = 0;
+    std::size_t jpeg_len = 0;
     int size = (fb->height - (fb->height / 10)) / 3;
     int cube_padding = size / 5;
     for (int i = 0; i < 3; i++) {
@@ -158,7 +158,7 @@ void CubeServer::setupRoutes() {
 String CubeServer::getCubeStateString(
     const std::array<std::array<int, 3>, 26>& cubeState) {
     String result = "[";
-    for (size_t j = 0; j < cubeState.size(); j++) {
+    for (std::size_t j = 0; j < cubeState.size(); j++) {
         // Juntar trios de cores
         result += "[";
         for (int i = 0; i < 3; i++) {
