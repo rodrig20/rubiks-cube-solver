@@ -34,6 +34,5 @@ void BaseMotor::turn_180(int clockwise) {
     }
 }
 
-
 // Posição natural
 void BaseMotor::to_default() { turn_fast_to(-14 + 90); }

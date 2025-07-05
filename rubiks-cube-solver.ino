@@ -6,7 +6,7 @@
 Robot* robot = nullptr;
 
 // Tenta gerar uma seed o mais próxima de aleatório
-void randomSeed(){
+void randomSeed() {
     // Inicializar gerador de números aleatórios com seed única
     // Usar múltiplas fontes de aleatoriedade para garantir unicidade
     unsigned long seed = 0;
@@ -52,7 +52,7 @@ void setup() {
     }
 
     robot = new Robot();
-    
+
     // Mensagem Final
     Serial.println("Servidor HTTP iniciado!");
 }

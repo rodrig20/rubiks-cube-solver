@@ -328,7 +328,7 @@ void Camera::grouping_colors(Color cores[54], int labels[54]) {
 
         // Verificar qual dos centros tem a peça mais próxima
         for (int j = 0; j < 6; j++) {
-            if (grup_size[j] >= 9) continue; // tamnho máximo é 9
+            if (grup_size[j] >= 9) continue;  // tamnho máximo é 9
             if (lowest_idx == -1) {
                 lowest_idx = j;
             }
