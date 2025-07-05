@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <LittleFS.h>
+#include <WiFi.h>
 
 #include "Robot.hpp"
 

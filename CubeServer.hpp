@@ -1,6 +1,7 @@
 #ifndef CUBE_SERVER_HPP
 #define CUBE_SERVER_HPP
 
+#include <Arduino.h>
 #include <LittleFS.h>
 #include <WebServer.h>
 #include <WiFi.h>

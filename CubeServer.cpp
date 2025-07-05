@@ -1,5 +1,6 @@
 #include "CubeServer.hpp"
 
+#include <Arduino.h>
 #include <LittleFS.h>
 #include <WebServer.h>
 #include <WiFi.h>
