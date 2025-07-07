@@ -2,7 +2,7 @@
 #include <LittleFS.h>
 #include <WiFi.h>
 
-#include "Robot.hpp"
+#include "src/Robot.hpp"
 
 Robot* robot = nullptr;
 
