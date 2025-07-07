@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-#include "Robot.hpp"
+#include "../Robot.hpp"
 #include "esp_jpg_decode.h"
 #include "img_converters.h"
 

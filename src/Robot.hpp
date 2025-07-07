@@ -4,11 +4,11 @@
 
 #include <string>
 
-#include "BaseMotor.hpp"
-#include "Camera.hpp"
-#include "CubeServer.hpp"
-#include "GrabberMotor.hpp"
-#include "Solver.hpp"
+#include "motors/BaseMotor.hpp"
+#include "camera/Camera.hpp"
+#include "network/CubeServer.hpp"
+#include "motors/GrabberMotor.hpp"
+#include "solver/Solver.hpp"
 
 using namespace std;
 
