@@ -6,6 +6,9 @@ BaseMotor::BaseMotor(Adafruit_PWMServoDriver* pwm, int motor_id)
     to_default();
 }
 
+void BaseMotor::turn_0() { turn_fast_to(0); }
+void BaseMotor::turn_180_aligned() { turn_fast_to(147 + 90); }
+
 // Gira o motor para a posição inicial ou 90º + um pouco
 // para compensar folga da base
 void BaseMotor::turn_90(int clockwise) {

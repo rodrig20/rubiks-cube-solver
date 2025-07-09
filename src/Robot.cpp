@@ -5,13 +5,14 @@
 #include <esp_system.h>
 
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <string>
 
-#include "motors/BaseMotor.hpp"
 #include "camera/Camera.hpp"
-#include "network/CubeServer.hpp"
+#include "motors/BaseMotor.hpp"
 #include "motors/GrabberMotor.hpp"
+#include "network/CubeServer.hpp"
 #include "solver/Solver.hpp"
 
 #define ERROR_LED_PIN 33
@@ -342,6 +343,84 @@ void Robot::update_state(const string new_state) {
 
 void Robot::reset() { update_state(Solver::solved_string()); }
 
+pair<int, MotorMove> sameMotor(const string move1, const string move2) {
+    unordered_map<string, MotorMove>::const_iterator it1 =
+        moveToMotorMove.find(move1);
+    unordered_map<string, MotorMove>::const_iterator it2 =
+        moveToMotorMove.find(move2);
+
+    if (it1 == moveToMotorMove.end() || it2 == moveToMotorMove.end())
+        return {0, MotorMove::Null};
+
+    if (it1->second == it2->second)
+        return {1, it1->second};
+    else
+        return {0, MotorMove::Null};
+}
+
+void Robot::simplify() {
+    int changed = 1;
+
+    while (changed) {
+        changed = 0;
+
+        vector<pair<string, string>> moves_to_replace = {
+            {"A U P U P U P A'", "I U P A'"},
+            {"U P U P U P", "F U P A'"},
+        };
+
+        for (std::size_t i = 0; i < moves_to_replace.size(); ++i) {
+            const string original_seq = moves_to_replace[i].first;
+            const string new_seq = moves_to_replace[i].second;
+
+            std::size_t pos = 0;
+            while ((pos = this->move_list.find(original_seq, pos)) !=
+                   string::npos) {
+                this->move_list.replace(pos, original_seq.length(), new_seq);
+                changed = 1;
+                // Avança para evitar loop infinito
+                pos += new_seq.length();
+            }
+        }
+    }
+
+    stringstream ss(this->move_list);
+
+    vector<string> moves_seq;
+
+    string move;
+
+    // Percorre a string e adiciona cada movimento a um vetor
+    while (ss >> move) {
+        moves_seq.push_back(move);
+    }
+
+    vector<string> new_moves_seq;
+
+    for (std::size_t i = 0; i < moves_seq.size(); i++) {
+        move = moves_seq[i];
+        if (new_moves_seq.size() > 0) {
+            string last_move = new_moves_seq.back();
+            int is_same;
+            MotorMove motor_type;
+            tie(is_same, motor_type) = sameMotor(move, last_move);
+            if (is_same && motor_type == MotorMove::Base) {
+                new_moves_seq.back() = move;
+            } else {
+                new_moves_seq.push_back(move);
+            }
+
+        } else {
+            new_moves_seq.push_back(move);
+        }
+    }
+
+    this->move_list = "";
+    for (std::size_t i = 0; i < new_moves_seq.size(); i++) {
+        this->move_list += new_moves_seq[i] + " ";
+    }
+}
+
 // Função chamada em loop para minimizar bloqueios na UI
 void Robot::run() {
     server->handleClient();
@@ -358,6 +437,8 @@ void Robot::run() {
         if (!move_list.empty()) {
             // Encontrar o fim da primeira palavra
             std::size_t end = move_list.find(' ');
+
+            simplify();
 
             // Extrair o primeiro movimento
             if (end != std::string::npos) {
@@ -380,6 +461,9 @@ void Robot::run() {
             } else if (move_id == "P") {
                 grabber->to_default();
                 motor_move = MotorMove::Grabber;
+            } else if (move_id == "I") {
+                base->turn_0();
+                motor_move = MotorMove::Base;
             } else if (move_id == "A'") {
                 base->turn_90_aligned(0);
                 motor_move = MotorMove::Base;
@@ -397,6 +481,9 @@ void Robot::run() {
                 motor_move = MotorMove::Base;
             } else if (move_id == "D") {
                 base->turn_180(1);
+                motor_move = MotorMove::Base;
+            } else if (move_id == "F") {
+                base->turn_180_aligned();
                 motor_move = MotorMove::Base;
             } else if (move_id == "C1") {
                 Color* face = cam->get_color_face();
