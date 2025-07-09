@@ -9,10 +9,10 @@
 #include <sstream>
 #include <string>
 
-#include "motors/BaseMotor.hpp"
 #include "camera/Camera.hpp"
-#include "network/CubeServer.hpp"
+#include "motors/BaseMotor.hpp"
 #include "motors/GrabberMotor.hpp"
+#include "network/CubeServer.hpp"
 #include "solver/Solver.hpp"
 
 #define ERROR_LED_PIN 33
