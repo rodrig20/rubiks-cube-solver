@@ -32,7 +32,9 @@ void Motor::turn_fast_to(int angle) {
         steps_remaning = 1;
     } else {
         // Escolher o número de steps
-        if (abs(angle - this->angle) > 120) {
+        if (abs(angle - this->angle) > 180) {
+            steps_remaning = 35;
+        } else if (abs(angle - this->angle) > 120) {
             steps_remaning = 25;
         } else {
             steps_remaning = 15;

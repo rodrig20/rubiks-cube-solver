@@ -3,6 +3,7 @@
 #include <Adafruit_PWMServoDriver.h>
 
 #include <string>
+#include <unordered_map>
 
 #include "motors/BaseMotor.hpp"
 #include "camera/Camera.hpp"
@@ -13,6 +14,16 @@
 using namespace std;
 
 enum class MotorMove { Grabber, Base, Null };
+
+const unordered_map<string, MotorMove> moveToMotorMove = {
+    {"S", MotorMove::Grabber}, {"U", MotorMove::Grabber},
+    {"L", MotorMove::Grabber}, {"P", MotorMove::Grabber},
+    {"A", MotorMove::Base},    {"A'", MotorMove::Base},
+    {"T", MotorMove::Base},    {"T'", MotorMove::Base},
+    {"D", MotorMove::Base},    {"D'", MotorMove::Base},
+    {"F", MotorMove::Base},    {"I", MotorMove::Base},
+    // C1 a C6 não movimentam motores, não precisam de enum aqui
+};
 
 // Forward declaration
 class CubeServer;
