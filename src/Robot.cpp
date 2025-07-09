@@ -342,6 +342,59 @@ void Robot::update_state(const string new_state) {
 
 void Robot::reset() { update_state(Solver::solved_string()); }
 
+pair<int, MotorMove> sameMotor(const string move1, const string move2) {
+    unordered_map<string, MotorMove>::const_iterator it1 =
+        moveToMotorMove.find(move1);
+    unordered_map<string, MotorMove>::const_iterator it2 =
+        moveToMotorMove.find(move2);
+
+    if (it1 == moveToMotorMove.end() || it2 == moveToMotorMove.end())
+        return {0, MotorMove::Null};
+
+    if (it1->second == it2->second)
+        return {1, it1->second};
+    else
+        return {0, MotorMove::Null};
+}
+
+void Robot::simplify() {
+    stringstream ss(this->move_list);
+
+    vector<string> moves_seq;
+
+    string move;
+
+    // Percorre a string e adiciona cada movimento a um vetor
+    while (ss >> move) {
+        moves_seq.push_back(move);
+    }
+
+    vector<string> new_moves_seq;
+
+    for (std::size_t i = 0; i < moves_seq.size(); i++) {
+        move = moves_seq[i];
+        if (new_moves_seq.size() > 0) {
+            string last_move = new_moves_seq.back();
+            int is_same;
+            MotorMove motor_type;
+            tie(is_same, motor_type) = sameMotor(move, last_move);
+            if (is_same && motor_type == MotorMove::Base) {
+                new_moves_seq.back() = move;
+            } else {
+                new_moves_seq.push_back(move);
+            }
+
+        } else {
+            new_moves_seq.push_back(move);
+        }
+    }
+
+    this->move_list = "";
+    for (std::size_t i = 0; i < new_moves_seq.size(); i++) {
+        this->move_list += new_moves_seq[i] + " ";
+    }
+}
+
 // Função chamada em loop para minimizar bloqueios na UI
 void Robot::run() {
     server->handleClient();
@@ -358,6 +411,8 @@ void Robot::run() {
         if (!move_list.empty()) {
             // Encontrar o fim da primeira palavra
             std::size_t end = move_list.find(' ');
+
+            simplify();
 
             // Extrair o primeiro movimento
             if (end != std::string::npos) {

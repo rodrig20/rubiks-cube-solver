@@ -40,6 +40,7 @@ class Robot {
     void virtual_turn_90_aligned(int clockwise);
     void virtual_turn_180(int clockwise);
     void virtual_camera(int face);
+    void simplify();
 
    public:
     int has_state = 0;
