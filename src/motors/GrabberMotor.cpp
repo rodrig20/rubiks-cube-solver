@@ -21,9 +21,9 @@ void GrabberMotor::spin(int times) {
 
 // Faz o cubo girar sobre si
 void GrabberMotor::spin() {
-    turn_to(230);
+    turn_slow_to(230);
     to_default();
 }
 
 // Mover para cima
-void GrabberMotor::up() { turn_to(230); }
+void GrabberMotor::up() { turn_slow_to(230); }
