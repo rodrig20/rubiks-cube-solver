@@ -405,7 +405,11 @@ void Robot::simplify() {
             MotorMove motor_type;
             tie(is_same, motor_type) = sameMotor(move, last_move);
             if (is_same && motor_type == MotorMove::Base) {
-                new_moves_seq.back() = move;
+                if (move == "D") {
+                    new_moves_seq.back() = "F";
+                } else {
+                    new_moves_seq.back() = move;
+                }
             } else {
                 new_moves_seq.push_back(move);
             }
