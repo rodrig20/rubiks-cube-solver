@@ -9,7 +9,7 @@ Motor::Motor(Adafruit_PWMServoDriver *pwm, int motor_id) {
 }
 
 // Configura o motor girar para um angulo escolhido numa velocidade normal
-void Motor::turn_to(int angle) {
+void Motor::turn_to(float angle) {
     final_angle = angle;
     // Angulo inicial
     if (this->angle == -1) {
@@ -76,6 +76,6 @@ int Motor::step() {
 }
 
 // Transforma angulo em pwm
-uint16_t Motor::angleToPulse(int angle) {
+uint16_t Motor::angleToPulse(float angle) {
     return SERVO_MIN + ((angle * (SERVO_MAX - SERVO_MIN)) / 270);
 }

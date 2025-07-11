@@ -7,23 +7,23 @@ BaseMotor::BaseMotor(Adafruit_PWMServoDriver* pwm, int motor_id)
 }
 
 void BaseMotor::turn_0() { turn_fast_to(0); }
-void BaseMotor::turn_180_aligned() { turn_fast_to(147 + 90); }
+void BaseMotor::turn_180_aligned() { turn_fast_to(267); }
 
 // Gira o motor para a posição inicial ou 90º + um pouco
 // para compensar folga da base
 void BaseMotor::turn_90(int clockwise) {
     if (clockwise) {
-        turn_fast_to(77 + 90);
+        turn_fast_to(184.5);
     } else {
-        turn_fast_to(-22 + 90);
+        turn_fast_to(73.2);
     }
 }
 // Gira o motor para a posição inicial ou 90º
 void BaseMotor::turn_90_aligned(int clockwise) {
     if (clockwise) {
-        turn_fast_to(67 + 90);
+        turn_fast_to(177);
     } else {
-        turn_fast_to(-14 + 90);
+        turn_fast_to(85);
     }
 }
 
@@ -31,11 +31,11 @@ void BaseMotor::turn_90_aligned(int clockwise) {
 // para compensar folga da base
 void BaseMotor::turn_180(int clockwise) {
     if (clockwise) {
-        turn_fast_to(154 + 90);
+        turn_fast_to(275.3);
     } else {
-        turn_fast_to(-14 + 90);
+        turn_fast_to(84.7);
     }
 }
 
 // Posição natural
-void BaseMotor::to_default() { turn_fast_to(-14 + 90); }
+void BaseMotor::to_default() { turn_fast_to(85); }

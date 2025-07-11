@@ -7,10 +7,10 @@ GrabberMotor::GrabberMotor(Adafruit_PWMServoDriver* pwm, int motor_id)
 }
 
 // Poisção com a caixa/barra para baixo
-void GrabberMotor::to_lock() { turn_fast_to(275); }
+void GrabberMotor::to_lock() { turn_fast_to(310); }
 
 // Posição natural
-void GrabberMotor::to_default() { turn_fast_to(245); }
+void GrabberMotor::to_default() { turn_fast_to(277); }
 
 // Aplica vários spin
 void GrabberMotor::spin(int times) {
@@ -21,9 +21,9 @@ void GrabberMotor::spin(int times) {
 
 // Faz o cubo girar sobre si
 void GrabberMotor::spin() {
-    turn_to(204);
+    turn_to(230);
     to_default();
 }
 
 // Mover para cima
-void GrabberMotor::up() { turn_to(204); }
+void GrabberMotor::up() { turn_to(230); }

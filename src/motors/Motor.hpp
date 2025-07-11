@@ -5,23 +5,24 @@
 #include <Adafruit_PWMServoDriver.h>
 
 const uint16_t SERVO_MIN = 70;   // Pulso mínimo (~0º)
-const uint16_t SERVO_MAX = 520;  // Pulso máximo (~270º)
+const uint16_t SERVO_MAX = 468;  // Pulso máximo (~270º)
+const int SERVO_STEP_SIZE = 10;
 
 class Motor {
    private:
-    int angle = -1;
+    float angle = -1;
     Adafruit_PWMServoDriver* pwm;
     int motor_id;
-    int final_angle;
+    float final_angle;
     int steps_remaning;
-    int current_angle;
+    float current_angle;
     unsigned long next_move_time = 0;
     void dly(int milllis_time);
-    uint16_t angleToPulse(int angle);
+    uint16_t angleToPulse(float angle);
 
    protected:
-    void turn_to(int angle);
-    void turn_fast_to(int angle);
+    void turn_to(float angle);
+    void turn_fast_to(float angle);
 
    public:
     int step();
